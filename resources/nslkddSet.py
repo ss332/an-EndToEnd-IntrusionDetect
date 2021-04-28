@@ -42,13 +42,15 @@ def nslSet():
 
     def create_list(lis, name):
         return [name + x for x in lis]
+
     # protocol type
     protocol = sorted(nsl_train.protocol_type.unique())
     service = sorted(nsl_train.service.unique())
     flag = sorted(nsl_train.flag.unique())
 
     # put together
-    processed_col = create_list(protocol, 'Protocol_type_') + create_list(service, 'service_') + create_list(flag, 'flag_')
+    processed_col = create_list(protocol, 'Protocol_type_') + create_list(service, 'service_') + create_list(flag,
+                                                                                                             'flag_')
     print(processed_col)
 
     # for test
@@ -57,35 +59,37 @@ def nslSet():
     flag_test = sorted(nsl_test.flag.unique())
 
     # put together
-    processed_test_col = create_list(protocol_test, 'Protocol_type_') + create_list(service_test, 'service_') + create_list(flag_test, 'flag_')
+    processed_test_col = create_list(protocol_test, 'Protocol_type_') + create_list(service_test,
+                                                                                    'service_') + create_list(flag_test,
+                                                                                                              'flag_')
 
-    # 将类别变为序号，列入有三个种类，则对应3个种类记为1，2，3,然后转化为onehot
+    # 将类别变为序号，列入有三个种类，则对应3个种类记为1，2，3,然后转化为oneHot
     train_categorical_columns_encoder = train_categorical_columns.apply(LabelEncoder().fit_transform)
     test_categorical_columns_encoder = test_categorical_columns.apply(LabelEncoder().fit_transform)
     print(train_categorical_columns_encoder.head())
 
     train_categorical_one_hot = OneHotEncoder().fit_transform(train_categorical_columns_encoder)
-    train_cat_data = pd.DataFrame(train_categorical_one_hot.toarray(), columns=processed_col)
+    train_categorical_data = pd.DataFrame(train_categorical_one_hot.toarray(), columns=processed_col)
 
     test_categorical_one_hot = OneHotEncoder().fit_transform(test_categorical_columns_encoder)
-    test_cat_data = pd.DataFrame(test_categorical_one_hot.toarray(), columns=processed_test_col)
+    test_categorical_data = pd.DataFrame(test_categorical_one_hot.toarray(), columns=processed_test_col)
 
-    print(train_cat_data.head(8))
+    print(train_categorical_data.head(8))
 
     # 测试集补齐缺少的服务类型，填0
     train_service = nsl_train['service'].tolist()
     test_service = nsl_test['service'].tolist()
     difference = list(set(train_service) - set(test_service))
     for col in difference:
-        test_cat_data[col] = 0
+        test_categorical_data[col] = 0
 
     # 去掉被转化成one_hot向量的3个字符特征，然后拼接one_hot dataFrame
-    new_train_df = nsl_train.join(train_cat_data)
+    new_train_df = nsl_train.join(train_categorical_data)
     new_train_df.drop('flag', axis=1, inplace=True)
     new_train_df.drop('protocol_type', axis=1, inplace=True)
     new_train_df.drop('service', axis=1, inplace=True)
     # new_train_df.to_csv("train.csv")
-    new_test_df = nsl_train.join(train_cat_data)
+    new_test_df = nsl_train.join(train_categorical_data)
     new_test_df.drop('flag', axis=1, inplace=True)
     new_test_df.drop('protocol_type', axis=1, inplace=True)
     new_test_df.drop('service', axis=1, inplace=True)
@@ -93,21 +97,21 @@ def nslSet():
     # print(new_train_df.shape)
 
     # 对样本攻击类别标签分类，定义：0=normal，1=Dos，2=Probe,3=R2L,4=U2R
-    train_class = new_train_df['label']
-    test_class = new_test_df['label']
+    train_label = new_train_df['label']
+    test_label = new_test_df['label']
 
-    new_train_class = train_class.replace(values.getNslLabelReplace())
-    new_test_class = test_class.replace(values.getNslLabelReplace())
+    new_train_label = train_label.replace(values.getNslLabelReplace())
+    new_test_label = test_label.replace(values.getNslLabelReplace())
 
-    new_test_df['label'] = new_test_class
-    new_train_df['label'] = new_train_class
+    new_test_df['label'] = new_test_label
+    new_train_df['label'] = new_train_label
     # print(new_train_df['class'].head())
 
-    # 分为训练样本和标签
-    x_train = new_train_df.drop('label', 1)
+    # 分为训练样本和对应标签
+    x_train = new_train_df.drop('label', axis=1)
     y_train = new_train_df['label']
 
-    x_test = new_test_df.drop('label', 1)
+    x_test = new_test_df.drop('label', axis=1)
     y_test = new_test_df['label']
 
     return x_train, y_train, x_test, y_test
