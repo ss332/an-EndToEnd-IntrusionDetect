@@ -13,6 +13,5 @@ def print_hi(name):
 
 
 if __name__ == '__main__':
-    s = 166.87811636924744+172.45500087738037 + 167.96384119987488
-    s = s/3
-    print(s)
+
+    print("hello world")
