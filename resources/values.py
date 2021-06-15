@@ -15,11 +15,11 @@ def printMetrics(model_name, y_true, y_pred, times):
     f1 = f1_score(y_true, y_pred, average=None)
 
     print('{}指标表现：'.format(model_name))
-    print('训练用时{}'.format(times))
+    print('训练用时{}s'.format(times))
     print('accuracy:{}'.format(accuracy))
-    print('precision:{},\t all precision:{}'.format(precision, precision_score(y_true, y_pred, average='macro')))
-    print('recall:{},\t all recall:{}'.format(recall, recall_score(y_true, y_pred, average='macro')))
-    print('f1_score:{},\t all recall:{}'.format(f1, f1_score(y_true, y_pred, average='macro')))
+    print('precision:{},\t 平均： precision:{}'.format(precision, precision_score(y_true, y_pred, average='macro')))
+    print('recall:{},\t 平均： recall:{}'.format(recall, recall_score(y_true, y_pred, average='macro')))
+    print('f1_score:{},\t 平均： recall:{}'.format(f1, f1_score(y_true, y_pred, average='macro')))
     print('------------------------------------------------------------')
 
 

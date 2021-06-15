@@ -10,27 +10,23 @@ def nslSet():
     # 读取数据集
     nsl_train = pd.read_csv(r"E:\data\NSL_KDD\KDDTrain+2.csv", header=None, names=col_names)
     nsl_test = pd.read_csv(r"E:\data\NSL_KDD\KDDTest+2.csv", header=None, names=col_names)
-    print('trainSet shape：', nsl_train.shape)
-    print('testSet shape：', nsl_test.shape)
-    # print(nsl_train.head(8))
-    # print(nsl_train.describe())
 
-    # 看一下样本类别分布
+    print('trainSet shape：', nsl_train.shape)
     print("trainSet labelDistribution:\n", nsl_train['label'].value_counts())
+    print('testSet shape：', nsl_test.shape)
     print("testSet labelDistribution:\n", nsl_test['label'].value_counts())
 
-    # 数据处理，准备将string字符类型特征转化为one_hot向量
-    # 查明那些事字符类型，这些类别特征是：protocol_type2,service3,flag4.
+    # 查明字符类型，这些类别特征是：protocol_type2,service3,flag4.
     print("\nTrain SET:")
     for feature in nsl_train.columns:
         if nsl_train[feature].dtypes == 'object':
-            print(feature, "has {num} 种".format(num=len(nsl_train[feature].unique())))
+            print(feature, " {num} ".format(num=len(nsl_train[feature].unique())))
             # print(nsl_train[feature].value_counts().sort_values(ascending=False).head())
 
     print("\nTEST SET:")
     for feature in nsl_train.columns:
         if nsl_test[feature].dtypes == 'object':
-            print(feature, "has {num} 种".format(num=len(nsl_test[feature].unique())))
+            print(feature, "{num} ".format(num=len(nsl_test[feature].unique())))
 
     # 测试集比样本集中的service类型少了6个，样本类别多了15种,单独将这几列取出来
     categorical_columns = ['protocol_type', 'service', 'flag']
@@ -43,23 +39,18 @@ def nslSet():
     def create_list(lis, name):
         return [name + x for x in lis]
 
-    # protocol type
+    # for train
     protocol = sorted(nsl_train.protocol_type.unique())
     service = sorted(nsl_train.service.unique())
     flag = sorted(nsl_train.flag.unique())
-
-    # put together
-    processed_col = create_list(protocol, 'Protocol_type_') + create_list(service, 'service_') + create_list(flag,
-                                                                                                             'flag_')
+    processed_col = create_list(protocol, 'Protocol_') + create_list(service, 'service_') + create_list(flag, 'flag_')
     print(processed_col)
 
     # for test
     protocol_test = sorted(nsl_test.protocol_type.unique())
     service_test = sorted(nsl_test.service.unique())
     flag_test = sorted(nsl_test.flag.unique())
-
-    # put together
-    processed_test_col = create_list(protocol_test, 'Protocol_type_') + create_list(service_test,
+    processed_test_col = create_list(protocol_test, 'Protocol_') + create_list(service_test,
                                                                                     'service_') + create_list(flag_test,
                                                                                                               'flag_')
 

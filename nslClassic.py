@@ -18,14 +18,15 @@ names = ["Nearest Neighbors", "Linear SVM", "RBF SVM",
 
 classifiers = [
     KNeighborsClassifier(5),
-    SVC(kernel="linear", C=0.025),
-    SVC(gamma=2, C=1),
-    DecisionTreeClassifier(),
-    RandomForestClassifier(n_estimators=100),
-    MLPClassifier(alpha=1, max_iter=1000),
-    AdaBoostClassifier(n_estimators=100),
-    GaussianNB(),
-    QuadraticDiscriminantAnalysis()]
+    # SVC(kernel="linear", C=0.025),
+    # SVC(gamma=2, C=1),
+    # DecisionTreeClassifier(),
+    # RandomForestClassifier(n_estimators=100),
+    # MLPClassifier(alpha=1, max_iter=1000),
+    # AdaBoostClassifier(n_estimators=100),
+    # GaussianNB(),
+    # QuadraticDiscriminantAnalysis()
+    ]
 
 x_train, y_train, x_test, y_test = nslkddSet.nslSet()
 
@@ -34,7 +35,7 @@ for name, clf in zip(names, classifiers):
     starts = time.time()
     clf.fit(x_train, y_train)
     finish = time.time()
-    use = starts - finish
+    use = finish - starts
     score = clf.score(x_test, y_test)
     print(score)
     y_predict = clf.predict(x_test)
