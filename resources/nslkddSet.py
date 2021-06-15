@@ -11,9 +11,9 @@ def nslSet():
     nsl_train = pd.read_csv(r"E:\data\NSL_KDD\KDDTrain+2.csv", header=None, names=col_names)
     nsl_test = pd.read_csv(r"E:\data\NSL_KDD\KDDTest+2.csv", header=None, names=col_names)
 
-    print('trainSet shape：', nsl_train.shape)
+    print('trainSet shape：', nsl_train.info())
     print("trainSet labelDistribution:\n", nsl_train['label'].value_counts())
-    print('testSet shape：', nsl_test.shape)
+    print('testSet shape：', nsl_test.info())
     print("testSet labelDistribution:\n", nsl_test['label'].value_counts())
 
     # 查明字符类型，这些类别特征是：protocol_type2,service3,flag4.
