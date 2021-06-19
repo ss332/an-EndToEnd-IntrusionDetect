@@ -1,6 +1,6 @@
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score)
-# 评估指标
+
 """"
 model_name :模型名字
 y_true,y_pred：对应真实标签和模型预测 
@@ -8,18 +8,19 @@ times：模型训练时间
 """
 
 
-def printMetrics(model_name, y_true, y_pred, times):
+def print_metrics(model_name, y_true, y_pred, times):
     accuracy = accuracy_score(y_true, y_pred)
     precision = precision_score(y_true, y_pred, average=None)
     recall = recall_score(y_true, y_pred, average=None)
     f1 = f1_score(y_true, y_pred, average=None)
 
     print('{}指标表现：'.format(model_name))
-    print('训练用时{}s'.format(times))
-    print('accuracy:{}'.format(accuracy))
-    print('precision:{},\t 平均： precision:{}'.format(precision, precision_score(y_true, y_pred, average='macro')))
-    print('recall:{},\t 平均： recall:{}'.format(recall, recall_score(y_true, y_pred, average='macro')))
-    print('f1_score:{},\t 平均： recall:{}'.format(f1, f1_score(y_true, y_pred, average='macro')))
+    print('训练用时 {}s'.format(times))
+    print('accuracy: {}'.format(accuracy))
+    print('precision: {},\t 平均： precision: {}'.format(precision, precision_score(y_true, y_pred, average='macro')))
+    print('recall: {},\t 平均： recall: {}'.format(recall, recall_score(y_true, y_pred, average='macro')))
+    print('f1_score: {},\t 平均： recall: {}'.format(f1, f1_score(y_true, y_pred, average='macro')))
+    print(model_name + "分类方法训练结束||")
     print('------------------------------------------------------------')
 
 

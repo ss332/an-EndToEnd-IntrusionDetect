@@ -1,9 +1,10 @@
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 from resources import values
 
 
-def nslSet():
+def nsl_set():
+    print("数据处理中---------------->")
     # 获取所有列的名字
     col_names = values.getNslColNames()
 
@@ -11,9 +12,9 @@ def nslSet():
     nsl_train = pd.read_csv(r"E:\data\NSL_KDD\KDDTrain+2.csv", header=None, names=col_names)
     nsl_test = pd.read_csv(r"E:\data\NSL_KDD\KDDTest+2.csv", header=None, names=col_names)
 
-    print('trainSet shape：', nsl_train.info())
+    print('trainSet shape：', nsl_train)
     print("trainSet labelDistribution:\n", nsl_train['label'].value_counts())
-    print('testSet shape：', nsl_test.info())
+    print('testSet shape：', nsl_test)
     print("testSet labelDistribution:\n", nsl_test['label'].value_counts())
 
     # 查明字符类型，这些类别特征是：protocol_type2,service3,flag4.
@@ -51,8 +52,8 @@ def nslSet():
     service_test = sorted(nsl_test.service.unique())
     flag_test = sorted(nsl_test.flag.unique())
     processed_test_col = create_list(protocol_test, 'Protocol_') + create_list(service_test,
-                                                                                    'service_') + create_list(flag_test,
-                                                                                                              'flag_')
+                                                                               'service_') + create_list(flag_test,
+                                                                                                         'flag_')
 
     # 将类别变为序号，列入有三个种类，则对应3个种类记为1，2，3,然后转化为oneHot
     train_categorical_columns_encoder = train_categorical_columns.apply(LabelEncoder().fit_transform)
@@ -71,8 +72,10 @@ def nslSet():
     train_service = nsl_train['service'].tolist()
     test_service = nsl_test['service'].tolist()
     difference = list(set(train_service) - set(test_service))
+    print('difference', difference)
     for col in difference:
-        test_categorical_data[col] = 0
+        test_categorical_data['service_' + col] = 0
+    print(test_categorical_data)
 
     # 去掉被转化成one_hot向量的3个字符特征，然后拼接one_hot dataFrame
     new_train_df = nsl_train.join(train_categorical_data)
@@ -99,10 +102,19 @@ def nslSet():
     # print(new_train_df['class'].head())
 
     # 分为训练样本和对应标签
+
     x_train = new_train_df.drop('label', axis=1)
     y_train = new_train_df['label']
 
     x_test = new_test_df.drop('label', axis=1)
     y_test = new_test_df['label']
+
+    # 标准化
+    # scaler1 = StandardScaler().fit(x_train)
+    # x_train = scaler1.transform(x_train)
+    #
+    # scaler2 = StandardScaler().fit(x_test)
+    # x_test = scaler2.transform(x_test)
+    print("处理完毕，数据传送中---------------->")
 
     return x_train, y_train, x_test, y_test
