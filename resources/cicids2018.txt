@@ -79,24 +79,24 @@ bw_hdr_len	Total bytes used for headers in the backward direction：在反向流
 fw_pkt_s	Number of forward packets per second：正向流每秒字节数
 bw_pkt_s	Number of backward packets per second：反向流每秒字节数
 pkt_len_min	Minimum length of a flow：流最小长度
-pkt_len_max	Maximum length of a flow
-pkt_len_avg	Mean length of a flow
-pkt_len_std	Standard deviation length of a flow
-pkt_len_va	Minimum inter-arrival time of packet
-fin_cnt	Number of packets with FIN
-syn_cnt	Number of packets with SYN
-rst_cnt	Number of packets with RST
-pst_cnt	Number of packets with PUSH
-ack_cnt	Number of packets with ACK
-urg_cnt	Number of packets with URG
-cwe_cnt	Number of packets with CWE
-ece_cnt	Number of packets with ECE
-down_up_ratio	Download and upload ratio
-pkt_size_avg	Average size of packet
-fw_seg_avg	Average size observed in the forward direction
-bw_seg_avg	Average size observed in the backward direction
-fw_byt_blk_avg	Average number of bytes bulk rate in the forward direction
-fw_pkt_blk_avg	Average number of packets bulk rate in the forward direction
+pkt_len_max	Maximum length of a flow:流最大长度
+pkt_len_avg	Mean length of a flow:流平均长度
+pkt_len_std	Standard deviation length of a flow：流长度的标准偏差值
+pkt_len_va	Minimum inter-arrival time of packet：两包到达时间的最小时间
+fin_cnt	Number of packets with FIN ：带FIN的数据包数
+syn_cnt	Number of packets with SYN ：带SYN的数据包数
+rst_cnt	Number of packets with RST ：带RST的数据包数
+pst_cnt	Number of packets with PUSH ：带PUSH的数据包数
+ack_cnt	Number of packets with ACK ：带ACK的数据包数
+urg_cnt	Number of packets with URG ：带URG的数据包数
+cwe_cnt	Number of packets with CWE ：带CWE的数据包数
+ece_cnt	Number of packets with ECE ：带ECE的数据包数
+down_up_ratio	Download and upload ratio:下载上传比例
+pkt_size_avg	Average size of packet：包平均尺寸
+fw_seg_avg	Average size observed in the forward direction：正向流中包平均大小
+bw_seg_avg	Average size observed in the backward direction：反向流中包平均大小
+fw_byt_blk_avg	Average number of bytes bulk rate in the forward direction：正向中字节块的平均速率
+fw_pkt_blk_avg	Average number of packets bulk rate in the forward direction：正向中包块的平均速率
 fw_blk_rate_avg	Average number of bulk rate in the forward direction
 bw_byt_blk_avg	Average number of bytes bulk rate in the backward direction
 bw_pkt_blk_avg	Average number of packets bulk rate in the backward direction
