@@ -84,6 +84,22 @@ def unsw_set():
     for col in difference:
         test_cat_df['state_' + col] = 0
     print(test_cat_df)
+    # 拼接
+    new_train_df = train_df.join(train_cat_df)
+    new_train_df.drop(['proto', 'service', 'state', 'attack_cat'], axis=1, inplace=True)
+
+    # 拼接
+    new_test_df = test_df.join(train_cat_df)
+    new_test_df.drop(['proto', 'service', 'state', 'attack_cat'], axis=1, inplace=True)
+
+    # 两分类
+    x_train = new_train_df.drop('label')
+    y_train = new_train_df.label
+
+    x_test = new_test_df.drop('label')
+    y_test = new_test_df.label
+
+    return x_train, y_train, x_test, y_test
 
 
 unsw_set()
