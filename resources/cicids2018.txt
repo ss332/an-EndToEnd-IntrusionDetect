@@ -49,7 +49,7 @@ tot_l_fw_pkt	Total size of packet in forward direction：前向流包总大小
 fw_pkt_l_max	Maximum size of packet in forward direction：前向流包最大尺寸
 fw_pkt_l_min	Minimum size of packet in forward direction：前向最小
 fw_pkt_l_avg	Average size of packet in forward direction：前向平均
-fw_pkt_l_std	Standard deviation size of packet in forward direction ：前向切片偏移标准大小
+fw_pkt_l_std	Standard deviation size of packet in forward direction ：前向包大小标准差
 Bw_pkt_l_max	Maximum size of packet in backward direction：后向最大
 Bw_pkt_l_min	Minimum size of packet in backward direction：后向最小
 Bw_pkt_l_avg	Mean size of packet in backward direction：后向平均
@@ -97,24 +97,24 @@ fw_seg_avg	Average size observed in the forward direction：正向流中包平�
 bw_seg_avg	Average size observed in the backward direction：反向流中包平均大小
 fw_byt_blk_avg	Average number of bytes bulk rate in the forward direction：正向中字节块的平均速率
 fw_pkt_blk_avg	Average number of packets bulk rate in the forward direction：正向中包块的平均速率
-fw_blk_rate_avg	Average number of bulk rate in the forward direction
-bw_byt_blk_avg	Average number of bytes bulk rate in the backward direction
-bw_pkt_blk_avg	Average number of packets bulk rate in the backward direction
-bw_blk_rate_avg	Average number of bulk rate in the backward direction
-subfl_fw_pk	The average number of packets in a sub flow in the forward direction
-subfl_fw_byt	The average number of bytes in a sub flow in the forward direction
-subfl_bw_pkt	The average number of packets in a sub flow in the backward direction
-subfl_bw_byt	The average number of bytes in a sub flow in the backward direction
-fw_win_byt	Number of bytes sent in initial window in the forward direction
-bw_win_byt	# of bytes sent in initial window in the backward direction
-Fw_act_pkt	# of packets with at least 1 byte of TCP data payload in the forward direction
-fw_seg_min	Minimum segment size observed in the forward direction
-atv_avg	Mean time a flow was active before becoming idle
-atv_std	Standard deviation time a flow was active before becoming idle
-atv_max	Maximum time a flow was active before becoming idle
-atv_min	Minimum time a flow was active before becoming idle
-idl_avg	Mean time a flow was idle before becoming active
-idl_std	Standard deviation time a flow was idle before becoming active
-idl_max	Maximum time a flow was idle before becoming active
-idl_min	Minimum time a flow was idle before becoming active
+fw_blk_rate_avg	Average number of bulk rate in the forward direction:正向流主体速率
+bw_byt_blk_avg	Average number of bytes bulk rate in the backward direction：反向中字节块的平均速率
+bw_pkt_blk_avg	Average number of packets bulk rate in the backward direction：反向中包块的平均速率
+bw_blk_rate_avg	Average number of bulk rate in the backward direction:反向流主体速率
+subfl_fw_pk	The average number of packets in a sub flow in the forward direction：正向子流中的平均数据包数
+subfl_fw_byt	The average number of bytes in a sub flow in the forward direction：正向子流中的平均字节数
+subfl_bw_pkt	The average number of packets in a sub flow in the backward direction：反向子流中的平均数据包数
+subfl_bw_byt	The average number of bytes in a sub flow in the backward direction：：反向子流中的平均字节数
+fw_win_byt	Number of bytes sent in initial window in the forward direction：在正向初始窗口中发送的字节数
+bw_win_byt	# of bytes sent in initial window in the backward direction：在反向初始窗口中发送的字节数
+Fw_act_pkt	# of packets with at least 1 byte of TCP data payload in the forward direction：在正向至少含有一个字节tcp数据的数据包数
+fw_seg_min	Minimum segment size observed in the forward direction：正向流中最小分割尺寸
+atv_avg	Mean time a flow was active before becoming idle：流激活平均时间
+atv_std	Standard deviation time a flow was active before becoming idle：流激活标准差
+atv_max	Maximum time a flow was active before becoming idle：流激活状态最大时间
+atv_min	Minimum time a flow was active before becoming idle：流激活状态最小时间
+idl_avg	Mean time a flow was idle before becoming active：流空闲平均时间
+idl_std	Standard deviation time a flow was idle before becoming active：流空闲时间标准差
+idl_max	Maximum time a flow was idle before becoming active：流空闲最大时间
+idl_min	Minimum time a flow was idle before becoming active：流空闲最小时间
 提取特征并创建 CSV 文件后，现在我们需要标记数据。在这里，我们使用我们的攻击场景计划、源和目标的 IP 和端口以及协议名称来标记每个流的数据。
