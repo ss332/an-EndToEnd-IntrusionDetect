@@ -93,13 +93,17 @@ def unsw_set():
     new_test_df.drop(['proto', 'service', 'state', 'attack_cat'], axis=1, inplace=True)
 
     # 两分类
-    x_train = new_train_df.drop('label')
+    x_train = new_train_df.drop('label', axis=1)
     y_train = new_train_df.label
 
-    x_test = new_test_df.drop('label')
+    # 可选的多分类
+    multi_cat = {'Normal': 0, 'Generic': 1, 'Exploits': 2, 'Fuzzers': 3, 'DoS': 4, 'Reconnaissance': 5, 'Analysis': 6,
+                 'Backdoor': 7, 'Shellcode': 8, 'Worms': 9}
+
+    x_test = new_test_df.drop('label', axis=1)
     y_test = new_test_df.label
 
     return x_train, y_train, x_test, y_test
 
 
-unsw_set()
+
