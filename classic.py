@@ -48,7 +48,7 @@ if __name__ == '__main__':
         make_pipeline(StandardScaler(), SVC(gamma='auto', kernel="linear", C=0.025)),
         KNeighborsClassifier(n_neighbors=5)]
 
-    train_sets(nslkddSet.nsl_set())
+    # train_sets(nslkddSet.nsl_set())
     train_sets(unswSet.unsw_set())
     train_sets(ids2018Set.ids2018())
 
