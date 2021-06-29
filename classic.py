@@ -49,7 +49,7 @@ if __name__ == '__main__':
         KNeighborsClassifier(n_neighbors=5)]
 
     # train_sets(nslkddSet.nsl_set())
-    train_sets(unswSet.unsw_set())
+    # train_sets(unswSet.unsw_set())
     train_sets(ids2018Set.ids2018())
 
 

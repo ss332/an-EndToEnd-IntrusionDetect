@@ -58,6 +58,7 @@ def unsw_set():
 
     print(test_cat_col_names)
 
+
     # 将类别变为序号，列入有三个种类，则对应3个种类记为1，2，3,然后转化为oneHot
     # for train
     train_cat_encoder = train_cat.apply(LabelEncoder().fit_transform)
@@ -68,7 +69,6 @@ def unsw_set():
     test_cat_encoder = test_cat.apply(LabelEncoder().fit_transform)
     test_cat_one_hot = OneHotEncoder().fit_transform(test_cat_encoder)
     test_cat_df = pd.DataFrame(test_cat_one_hot.toarray(), columns=test_cat_col_names)
-
 
     # 训练集补齐缺少的state,proto类型，填0
     train_state = train_df['state'].tolist()
@@ -95,20 +95,18 @@ def unsw_set():
 
     # 拼接
     y_train = train_df.label
-    train_df.drop(['proto', 'service', 'state', 'attack_cat', 'stcpb', 'dtcpb','label'], axis=1, inplace=True)
-    scaler1 = StandardScaler().fit(train_df)
-    train_df = pd.DataFrame(scaler1.transform(train_df))
-
+    train_df.drop(['proto', 'service', 'state', 'attack_cat', 'stcpb', 'dtcpb', 'label'], axis=1, inplace=True)
+    # scaler1 = StandardScaler().fit(train_df)
+    # train_df = pd.DataFrame(scaler1.transform(train_df))
 
     new_train_df = train_df.join(train_cat_df)
     print(len(new_train_df.columns))
 
-
     # 拼接
     y_test = test_df.label
-    test_df.drop(['proto', 'service', 'state', 'attack_cat', 'stcpb', 'dtcpb','label'], axis=1, inplace=True)
-    scaler2 = StandardScaler().fit(test_df)
-    test_df = pd.DataFrame(scaler2.transform(test_df))
+    test_df.drop(['proto', 'service', 'state', 'attack_cat', 'stcpb', 'dtcpb', 'label'], axis=1, inplace=True)
+    # scaler2 = StandardScaler().fit(test_df)
+    # test_df = pd.DataFrame(scaler2.transform(test_df))
 
     new_test_df = test_df.join(test_cat_df)
     print(len(new_test_df.columns))
