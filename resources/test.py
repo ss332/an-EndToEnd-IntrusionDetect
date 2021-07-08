@@ -1,13 +1,24 @@
 import numpy as np
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+from scapy import all
 
-X = np.array([[-1, -1], [-2, -1], [1, 1], [2, 1]])
-y = np.array([1, 1, 2, 2])
-from sklearn.svm import SVC
+cap_file = open(r'E:\Amazon\origin\pcap\capDESKTOP-AN3U28N-172.31.64.17', 'rb')
 
-clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
-clf.fit(X, y)
+cap_img = cap_file.read(800)
 
+print(cap_img)
 
-print(clf.predict([[-0.8, -1]]))
+tmp_a = []
+for byte in cap_img:
+    tmp_a.append(byte)
+
+tmp_a = np.array(tmp_a, dtype=np.uint8)
+arrays=tmp_a.reshape((20,40),order='C')
+print(arrays)
+plt.imshow(arrays)
+plt.show()
+
+# 切割tcp流：
+packets = all.rdpcap(r'E:\Amazon\origin\pcap\capDESKTOP-AN3U28N-172.31.64.26')
+print(packets[12].show())
+

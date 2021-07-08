@@ -95,7 +95,7 @@ def unsw_set():
 
     # 拼接
     y_train = train_df.label
-    train_df.drop(['proto', 'service', 'state', 'attack_cat', 'stcpb', 'dtcpb', 'label'], axis=1, inplace=True)
+    train_df.drop(['proto', 'service', 'state', 'attack_cat', 'label'], axis=1, inplace=True)
     # scaler1 = StandardScaler().fit(train_df)
     # train_df = pd.DataFrame(scaler1.transform(train_df))
 
@@ -104,7 +104,7 @@ def unsw_set():
 
     # 拼接
     y_test = test_df.label
-    test_df.drop(['proto', 'service', 'state', 'attack_cat', 'stcpb', 'dtcpb', 'label'], axis=1, inplace=True)
+    test_df.drop(['proto', 'service', 'state', 'attack_cat', 'label'], axis=1, inplace=True)
     # scaler2 = StandardScaler().fit(test_df)
     # test_df = pd.DataFrame(scaler2.transform(test_df))
 
@@ -120,3 +120,4 @@ def unsw_set():
                  'Backdoor': 7, 'Shellcode': 8, 'Worms': 9}
 
     return x_train, y_train, x_test, y_test
+

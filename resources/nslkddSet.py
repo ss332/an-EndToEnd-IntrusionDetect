@@ -15,7 +15,8 @@ def nsl_set():
     print('trainSet shape：', nsl_train)
     print("trainSet labelDistribution:\n", nsl_train['label'].value_counts())
     print('testSet shape：', nsl_test)
-    print("testSet labelDistribution:\n", nsl_test['label'].value_counts())
+    print("testSet labelDistribution:\n", nsl_test['label'].value_counts()
+          )
 
     # 查明字符类型，这些类别特征是：protocol_type2,service3,flag4.
     print("\nTrain SET:")
