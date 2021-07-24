@@ -28,6 +28,7 @@ def train_sets(data_set):
         print(score)
         use = time.time() - starts
         y_predict = clf.predict(x_test)
+        print(y_predict)
         values.print_metrics(name, y_test, y_predict, use)
 
 

@@ -7,9 +7,10 @@ import unicodedata
 import string
 import torch.nn as nn
 import random
-import torch.optim as optim
 import math
 import time
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 
 def findFiles(path): return glob.glob(path)
@@ -63,7 +64,7 @@ def letterToTensor(letter):
     return tensor
 
 
-# 将lines中的名字line转化为<line_length*1*n_letters>
+# 将lines中的名字line转化为<line_length*1*n_letters> 中间的1是批次，batch为1
 def lineToTensor(line):
     line_length = len(line)
     tensor = torch.zeros(line_length, 1, n_letters)
@@ -84,28 +85,33 @@ class LSTMRnn(nn.Module):
 
         self.hidden_size = hidden_size
         self.lstm1 = nn.LSTM(input_size, hidden_size, num_layers=1)
-        self.lstm2 = nn.LSTM(hidden_size, output_size, num_layers=1)
+        self.h2o = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=2)
 
-    def forward(self, input, hidden1, hidden2):
-        output1, hidden1 = self.lstm1(input, hidden1)
-
-        output, hidden2 = self.lstm2(output1, hidden2)
+    def forward(self, input, hidden):
+        output, hidden = self.lstm1(input, hidden)
+        output = self.h2o(output)
         output = self.softmax(output)
-        return output, hidden1, hidden2
+        return output, hidden
 
     def initHidden(self):
-        return torch.zeros(1, 1, self.hidden_size)
+        return torch.zeros(1, 1, n_hidden), torch.zeros(1, 1, n_hidden)
 
 
 n_hidden = 128
 
 lstmRnn = LSTMRnn(n_letters, n_hidden, n_categories)
 line_tensor = lineToTensor('Albert')
-hidden_1 = (torch.zeros(1, 1, n_hidden), torch.zeros(1, 1, n_hidden))
-hidden_2 = torch.zeros(1, 1, n_categories), torch.zeros(1, 1, n_categories)
-output, next_hidden1, next_hidden2 = lstmRnn(line_tensor[0].unsqueeze(0), hidden_1, hidden_2)
+
+hidden = (torch.zeros(1, 1, n_hidden), torch.zeros(1, 1, n_hidden))
+output, next_hidden1 = lstmRnn(line_tensor[0].unsqueeze(0), hidden)
 print(output)
+
+
+def categoryFromOutput(output):
+    top_v, top_i = output.topk(1)
+    category_i = top_i[0].item()
+    return all_categories[category_i], category_i
 
 
 def randomChoice(l):
@@ -116,7 +122,7 @@ def randomTrainingExample():
     category = randomChoice(all_categories)
     line = randomChoice(category_lines[category])
     category_tensor = torch.tensor([all_categories.index(category)], dtype=torch.long)
-    line_tensor = lineToTensor(line).unsqueeze(0)
+    line_tensor = lineToTensor(line)
     return category, line, category_tensor, line_tensor
 
 
@@ -126,25 +132,116 @@ for i in range(10):
 
 # 训练神经网络
 criterion = nn.NLLLoss()
-learning_rate = 0.005
-optimizer = optim.SGD(lstmRnn.parameters(), lr=learning_rate, momentum=0.9)
-optimizer2 = torch.optim.RMSprop(lstmRnn.parameters(), lr=learning_rate)
+learning_rate = 0.001
+# optimizer = optim.SGD(lstmRnn.parameters(), lr=learning_rate, momentum=0.9)
+optimizer = torch.optim.RMSprop(lstmRnn.parameters(), lr=learning_rate)
 
 
 def train(category_tensor, line_tensor):
-
-
     global output
-    hidden1 = (torch.zeros(1, 1, n_hidden), torch.zeros(1, 1, n_hidden))
-    hidden2 = torch.zeros(1, 1, n_categories), torch.zeros(1, 1, n_categories)
-
+    hidden = lstmRnn.initHidden()
     optimizer.zero_grad()
 
     for i in range(line_tensor.size()[0]):
-        output, hidden1, hidden2 = lstmRnn(line_tensor[i].unsqueeze(0), hidden1, hidden2)
+        output, hidden1 = lstmRnn(line_tensor[i].unsqueeze(0), hidden)
 
-    loss = criterion(output, category_tensor)
+    loss = criterion(output.squeeze(0), category_tensor)
     loss.backward()
     optimizer.step()
 
     return output, loss.item()
+
+
+n_iters = 100000
+print_every = 5000
+plot_every = 1000
+
+current_loss = 0
+all_losses = []
+
+
+def timeSince(since):
+    now = time.time()
+    s = now - since
+    m = math.floor(s / 60)
+    s -= m * 60
+    return '%dm %ds' % (m, s)
+
+
+start = time.time()
+
+for iter in range(1, n_iters + 1):
+    category, line, category_tensor, line_tensor = randomTrainingExample()
+    output, loss = train(category_tensor, line_tensor)
+    current_loss += loss
+
+    if iter % print_every == 0:
+        guess, guess_i = categoryFromOutput(output)
+        correct = 'yes' if guess == category else 'x(%s)' % category
+        print('%d %d%% (%s) %.4f %s / %s %s' % (iter, iter / n_iters * 100,
+                                                timeSince(start), loss, line, guess, correct))
+
+    if iter % plot_every == 0:
+        all_losses.append(current_loss / plot_every)
+        current_loss = 0
+
+plt.figure()
+plt.plot(all_losses)
+plt.show()
+# 评价模型性能
+# 使用混淆矩阵存储正确的猜测，行代表实际的类别，列代表模型预测，猜的越准对角线应该越亮
+confusion = torch.zeros(n_categories, n_categories)
+n_confusion = 100000
+
+
+def evaluate(line_tensor):
+    global output
+    hidden = lstmRnn.initHidden()
+
+    for i in range(line_tensor.size()[0]):
+        output, hidden = lstmRnn(line_tensor[i].unsqueeze(0), hidden)
+
+    return output
+
+
+for i in range(n_confusion):
+    category, line, category_tensor, line_tensor = randomTrainingExample()
+    output = evaluate(line_tensor)
+    guess, guess_i = categoryFromOutput(output)
+    category_i = all_categories.index(category)
+    confusion[category_i][guess_i] += 1
+
+for i in range(n_categories):
+    confusion[i] = confusion[i] / confusion[i].sum()
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+cax = ax.matshow(confusion.numpy())
+fig.colorbar(cax)
+
+ax.set_xticklabels([''] + all_categories, rotation=90)
+ax.set_yticklabels([''] + all_categories)
+
+ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+plt.show()
+
+
+def predict(input_line, n_predictions=3):
+    print('\n> %s' % input_line)
+    with torch.no_grad():
+        output = evaluate(lineToTensor(input_line))
+
+        topv, topi = output.topk(n_predictions, 1, True)
+        predictions = []
+
+        for i in range(n_predictions):
+            value = topv[0][i].item()
+            category_index = topi[0][i].item()
+            print('(%.2f) %s' % (value, all_categories[category_index]))
+            predictions.append([value, all_categories[category_index]])
+
+
+predict('Dovesky')
+predict('Jackson')
+predict('Satoshi')

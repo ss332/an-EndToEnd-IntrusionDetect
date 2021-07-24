@@ -6,11 +6,10 @@ import re
 # print(packets[131].time)
 # print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(packets[131].time)))
 # print(packets[131].show())
-import torch
-import torch.nn as nn
-rnn = nn.LSTM(10, 20, 2)
-input = torch.randn(5, 3, 10)
-h0 = torch.randn(2, 3, 20)
-c0 = torch.randn(2, 3, 20)
-output, (hn, cn) = rnn(input, (h0, c0))
-print(output.size())
+
+s = "you're asking me out..?that's so cute.what's your name again?"
+print(s)
+print(re.sub(r"([.!?])", r" \1", s))
+
+s = re.sub(r"[^a-zA-Z.!?]+", r" ", s)
+print(s)
