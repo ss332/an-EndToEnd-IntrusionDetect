@@ -6,6 +6,8 @@ import operator
 import re
 import pandas as pd
 import math
+import torch
+import torch.nn as nn
 
 n_iters = 100000
 print_every = 1000
@@ -111,3 +113,8 @@ for i in range(5):
 df = pd.DataFrame(flows, columns=['SourceIP', 'DestinationIP', 'SourcePort', 'DestinationPort', 'Protocol', 'isFin'])
 df.to_csv('flows.csv')
 packets.close()
+
+
+
+
+
