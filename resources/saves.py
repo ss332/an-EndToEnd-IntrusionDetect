@@ -15,5 +15,11 @@ print(re.sub(r"([.!?])", r" \1", s))
 s = re.sub(r"[^a-zA-Z.!?]+", r" ", s)
 print(s)
 a= torch.Tensor([1,2,3,4])
+
 print(a.squeeze(0))
 print(torch.tensor([[41]]).size())
+c=np.zeros((1,3))
+print(c.size)
+for i in range(10):
+    i=i+4
+    print(i)
