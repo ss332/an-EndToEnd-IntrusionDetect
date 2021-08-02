@@ -430,7 +430,7 @@ evaluateAndShowAttention("c est un jeune directeur plein de talent .")
 # 62m 16s (- 9m 34s) (65000 86%) 0.6610
 # 67m 0s (- 4m 47s) (70000 93%) 0.6083
 # 71m 56s (- 0m 0s) (75000 100%) 0.5695
-# C:/Users/alice/intrusionDetection/rnn3.py:319: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
+#
 #   plt.show()
 # > j en ai fini de vous ecouter .
 # = i m done listening to you .
