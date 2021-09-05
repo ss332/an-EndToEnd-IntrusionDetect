@@ -22,7 +22,7 @@ def timeSince(since):
     return '%dm %ds' % (m, s)
 
 
-transform = transforms.Compose([transforms.ToTensor()])
+transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 batch_size = 8
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
@@ -34,6 +34,12 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,shuffle=
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
+# get some random training images
+dataiter = iter(trainloader)
+images, labels = dataiter.next()
+print(images.size())
+print(images.dtype)
+print(labels)
 
 class LeNet(nn.Module):
     def __init__(self):
@@ -69,7 +75,9 @@ class Net2(nn.Module):
         self.fc3 = nn.Linear(64, 10)
 
     def forward(self, x):
+        # 30*30 15
         x = self.pool(self.relu(self.conv1(x)))
+        # 13*13 6
         x = self.pool(self.relu(self.conv2(x)))
         x = self.relu(self.conv3(x))
         x = torch.flatten(x, 1)  # 除去批次维度，其他展平 [N,1024]
@@ -202,6 +210,7 @@ def classPerform():
 
 
 classPerform()
+
 # 50000 12500
 # Finishing training -lenet
 # Accuracy of the network on the 10000 test images: 60 % (6020)
