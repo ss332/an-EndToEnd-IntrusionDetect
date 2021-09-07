@@ -1,5 +1,7 @@
 # This is a sample Python script.
-import torch;
+import torch
+from scapy import all
+import re
 """
 author:alice，
 time:2020.12.28
@@ -12,17 +14,21 @@ import torch.nn as nn
 import torch
 import time
 from sklearn.utils import shuffle
+import operator
 
 def print_hi(name):
     print(f'Hi, {name}')
 
 
 if __name__ == '__main__':
+    record_name = r'E:\bot\FlowId{}.pt'.format(177)
+    # 归一化
+    record_flow = torch.load(record_name) / 255.0
+    space_tensor = torch.zeros(784)
     flows = pd.read_csv('flows1.csv')
-    flows=shuffle(flows)
-    label_1 = flows[flows["label"]==1]
-    set=flows["label"]
-    label=[143867,148505,114363,46950,181006]
-    print(label_1.iloc[233])
-    print(set[75882])
-
+    flows = shuffle(flows)
+    # 标签集
+    labelSet = flows["label"]
+    s=labelSet[77]
+    target_tensor = torch.tensor(s)
+    print(target_tensor)

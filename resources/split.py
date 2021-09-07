@@ -1,12 +1,11 @@
-import numpy as np
-import matplotlib.pyplot as plt
+
 from scapy import all
 import time
 import operator
 import re
 import pandas as pd
 import math
-
+import torch
 # 切割tcp流：五元组(SourceIP, DestinationIP, SourcePort, DestinationPort, Protocol)
 # attack = 18.219.211.138
 # --------------------------------------------------------
@@ -76,9 +75,10 @@ for file in files:
                     isSyn = 1
                 if re.search('F', flags) is not None:
                     isFin = 1
+
                 flow = [packet['IP'].src, packet['IP'].dst, packet['TCP'].sport, packet['TCP'].dport,
-                        packet['IP'].proto,
-                        isFin]
+                        packet['IP'].proto, 0]
+
             elif packet.haslayer('UDP'):
                 flow = [packet['IP'].src, packet['IP'].dst, packet['UDP'].sport, packet['UDP'].dport,
                         packet['IP'].proto, 0]
@@ -87,6 +87,7 @@ for file in files:
 
         tmp_a = []
         size = 0
+
         for byte in bytes(packet):
             # if 26 < size < 39:
             #     tmp_a.append(0)
@@ -96,58 +97,87 @@ for file in files:
             if size == 256:
                 break
         if size <= 256:
-            while size <= 256:
+            while size < 256:
                 tmp_a.append(0)
                 size = size + 1
 
-        tmp_a = np.array(tmp_a, dtype=np.int32)
-        arrays = tmp_a.reshape((1, 16, 16), order='C')
-        file_name = r'E:\bot\FlowId{}.npy'.format(flowId)
+        tmp_a = torch.tensor(tmp_a, dtype=torch.int32)
+        arrays = tmp_a.view((1, 16, 16))
+        file_name = r'E:\bot\FlowId{}.pt'.format(flowId)
         if i == 0:
             flows.append(flow)
             flows_time.append(packet.time)
-            np.save(file_name, arrays)
+            torch.save(arrays, file_name)
             print('完成flow', flowId)
             flowId = flowId + 1
-        else:
-            for j in range(len(flows) - 1, -1, -1):
-                if (packet.time - flows_time[j]) > 1200:
-                    isTimeOut = 1
-                # 第一条数据
-                if isSyn == 1:
-                    flows.append(flow)
-                    flows_time.append(packet.time)
-                    np.save(file_name, arrays)
-                    flowId = flowId + 1
-                    break
-                #  超时，
-                elif operator.eq(flows[j], flow) and isTimeOut == 1 :
-                    flows.append(flow)
-                    flows_time.append(packet.time)
-                    np.save(file_name, arrays)
-                    flowId = flowId + 1
-                    break
-                # 加入流数据
-                elif operator.eq(flows[j], flow) and isTimeOut != 1 and flows[j][5] != 1:
-                    flows[j][5] = isFin
-                    record_name = r'E:\bot\FlowId{}.npy'.format(j)
-                    record_flow = np.load(record_name)
-                    merge_flow = np.concatenate((record_flow, arrays), axis=0)
-                    np.save(record_name, merge_flow)
+            continue
+        isUsed=0
+        for j in range(len(flows) - 1, -1, -1):
+            if (packet.time - flows_time[j]) > 600:
+                isTimeOut = 1
+            # 第一条数据
+            if isSyn == 1:
+                flows.append(flow)
+                flows_time.append(packet.time)
+                torch.save(arrays, file_name)
+                flowId = flowId + 1
+                isUsed = 1
+                break
+
+            # 5元组一样，分两种情况
+            if operator.eq(flows[j], flow):
+                # 没有超时
+                if isTimeOut != 1:
+                    isUsed = 1
+                    record_name = r'E:\bot\FlowId{}.pt'.format(j)
+                    record_flow = torch.load(record_name)
+                    merge_flow = torch.cat((record_flow, arrays), 0)
+                    torch.save(merge_flow, record_name)
                     # print('flow %d 合并 flow %d' % (i, j))
                     break
-                # 寻到末尾也没有，完全的新流，创建
-                elif j == 0 and not operator.eq(flows[j], flow):
+                # 超时了
+                else:
+
                     flows.append(flow)
                     flows_time.append(packet.time)
-                    np.save(file_name, arrays)
+                    torch.save(arrays, file_name)
                     flowId = flowId + 1
+                    isUsed = 1
+                    break
 
-        if (flowId + 1) % print_every == 0:
-            print('%d %d%% (%s)  %s' % (flowId+1, (flowId + 1) / 180000, timeSince(start), flow))
+        if isUsed==0:
+            flows.append(flow)
+            flows_time.append(packet.time)
+            torch.save(arrays, file_name)
+            flowId = flowId + 1
 
+        if (flowId + 1) % 1000 == 0:
+            print('%d %d%% (%s)  %s' % (i + 1, 100 * (i + 1) / 180000, timeSince(start), flow))
 
 df = pd.DataFrame(flows, columns=['SourceIP', 'DestinationIP', 'SourcePort', 'DestinationPort', 'Protocol', 'isFin'])
 df['Time'] = flows_time
 df.to_csv('flows.csv')
+
+
+def getSpace():
+    for i in range(106691):
+        record_name = r'E:\bot\FlowId{}.pt'.format(i)
+        # 归一化
+        record_flow = torch.load(record_name) / 255.0
+        space_tensor = torch.zeros(784)
+
+        size = 0
+        for k in range(record_flow.size(0)):
+            x = torch.flatten(record_flow[k], 1)
+            for j in range(x.size(1)):
+                if x[0][j] != 0 and size < 784:
+                    space_tensor[size] = x[0][j]
+                    size = size + 1
+        space_name = r'E:\space\spaceId{}.pt'.format(i)
+        torch.save(space_tensor, space_name)
+        if (i + 1) % 1000 == 0:
+            print('%d %d%% (%s) ' % (i + 1, 100 * (i + 1) / 106691, timeSince(start),))
+
+getSpace()
+
 print('读取结束......')

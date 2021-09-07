@@ -3,7 +3,7 @@ from sklearn.utils import shuffle
 
 flows = pd.read_csv('./resources/flows.csv')
 print(flows.head())
-print(flows['id'].max())
+
 
 labels = []
 ips = ['172.31.69.23', '172.31.69.8', '172.31.69.30']
@@ -12,7 +12,7 @@ time2 = [1520015040.0, 1520020500.0]
 attacker_ip = '18.219.211.138'
 attacker_port = 8080
 
-for i in range(flows['id'].max() + 1):
+for i in range(106691):
     match_ip = 0
     match_time = 0
     dst = flows['DestinationIP'][i]

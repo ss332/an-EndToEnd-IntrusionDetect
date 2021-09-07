@@ -161,7 +161,7 @@ def train():
 
 
 
-train1()
+# train1()
 print('Finishing training')
 # PATH = './cifar_net.pth'
 # torch.save(net.state_dict(), PATH)
@@ -187,7 +187,7 @@ def evaluate():
                                                                          100 * correct / total, correct))
 
 
-evaluate()
+# evaluate()
 
 
 def classPerform():
@@ -209,7 +209,7 @@ def classPerform():
         print("Accuracy for class {:5s} is: {:.1f} %".format(classname, accuracy))
 
 
-classPerform()
+# classPerform()
 
 # 50000 12500
 # Finishing training -lenet
