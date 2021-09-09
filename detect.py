@@ -185,4 +185,4 @@ evaluate(timeRnn_model,spaceCnn_model)
 # recall : 99 % (10216)
 # precision : 96 % (10216)
 # f1Score : 98 %
-# 太棒了！ 松了一口气
+# nice!
