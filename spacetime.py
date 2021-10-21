@@ -44,7 +44,8 @@ class Space(nn.Module):
         self.relu = nn.ReLU()
         self.fc1 = nn.Linear(1024, 128)
         self.fc2 = nn.Linear(256, 64)
-        self.fc3 = nn.Linear(64, 2)
+        self.fc3 = nn.Linear(64, 3)
+
 
     def forward(self, x, rnn_output):
         # 26*26 13
@@ -56,6 +57,7 @@ class Space(nn.Module):
         # 64*4*4=1024
         x = torch.flatten(x, 1)  # 除去批次维度，其他展平 [N,1024]
         # 1*64
+
         x = self.relu(self.fc1(x))
 
         rnn_output=rnn_output.view(1,-1)

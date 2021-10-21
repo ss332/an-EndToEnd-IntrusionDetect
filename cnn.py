@@ -82,6 +82,7 @@ class Net2(nn.Module):
         x = self.relu(self.conv3(x))
         x = torch.flatten(x, 1)  # 除去批次维度，其他展平 [N,1024]
         x = self.relu(self.fc1(x))
+
         x = self.fc3(x)
         return x
 

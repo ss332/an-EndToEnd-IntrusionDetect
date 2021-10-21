@@ -14,6 +14,10 @@ import time
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
+import warnings
+
+warnings.filterwarnings("ignore")
+
 
 def train_sets(data_set):
 
