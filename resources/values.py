@@ -20,7 +20,7 @@ def print_metrics(model_name, y_true, y_pred, times):
     print('precision: {},\t 平均： precision: {}'.format(precision, precision_score(y_true, y_pred, average='macro')))
     print('recall: {},\t 平均： recall: {}'.format(recall, recall_score(y_true, y_pred, average='macro')))
     print('f1_score: {},\t 平均： recall: {}'.format(f1, f1_score(y_true, y_pred, average='macro')))
-    print(model_name + "分类方法训练结束||")
+    print( "||")
     print('------------------------------------------------------------')
 
 

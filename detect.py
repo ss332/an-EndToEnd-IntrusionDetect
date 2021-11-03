@@ -12,7 +12,7 @@ import numpy as np
 warnings.filterwarnings("ignore")
 
 # flows数据记录表，表明每一个流，具体数据从E:\bot\FlowId{}.npy根据id取得
-flows = pd.read_csv('flows2.csv')
+flows = pd.read_csv('flows1.csv')
 flows = shuffle(flows)
 # 标签集
 labelSet = flows["label"]
@@ -39,8 +39,8 @@ def timeSince(since, percent):
 
 def getInputAndTargerTensor(id):
     id = flows["id"].iloc[id]
-    flow_name = r'E:\ddos\ddos{}.pt'.format(id)
-    space_name = r'E:\space2\space{}.pt'.format(id)
+    flow_name = r'E:\bot\bot{}.pt'.format(id)
+    space_name = r'E:\space\space{}.pt'.format(id)
     # 归一化
     # n*16*16
     input_tensor = torch.load(flow_name) / 255.0
@@ -248,9 +248,18 @@ trainIter()
 
 # timeRnn_model.load_state_dict(torch.load('rnn_model_weights.pth'))
 # spaceCnn_model.load_state_dict(torch.load('space_model_weights.pth'))
-evaluate(timeRnn_model, spaceCnn_model)
+evaluate2(timeRnn_model, spaceCnn_model)
 
-# Accuracy : 99.9800 % (29994)
-# recall : 99.9802  % (20202)
-# precision : 99.9901  % (20202)
-# f1Score : 99.9852  %
+# bot测试集共计30000 ,比例为0.3
+# Accuracy : 99.9967 % (29999)
+# recall : 100.0000  % (20184)
+# precision : 99.9950  % (20184)
+# f1Score : 99.9975  %
+
+
+
+
+# ddosAccuracy : 99.9933 % (29998)
+# recall : 99.9866 100.0000 100.0000 % (14969)
+# precision : 100.0000 100.0000 99.9866 % (54)
+# f1Score : 99.9933 100.0000 99.9933 % (14975)
