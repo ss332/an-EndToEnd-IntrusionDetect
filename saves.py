@@ -24,6 +24,7 @@ b_end = "Feb 21 22:43:00 2018"
 d_start = "Feb 22 02:05:00 2018"
 d_end = "Feb 22 03:05:00 2018"
 
+tim1 = "Feb 15 02:00:00 2018"
 print(time.mktime(time.strptime(a_start, "%b %d %H:%M:%S %Y")))
 print(time.mktime(time.strptime(a_end, "%b %d %H:%M:%S %Y")))
 print(time.mktime(time.strptime(c_start, "%b %d %H:%M:%S %Y")))
@@ -33,13 +34,13 @@ print(time.mktime(time.strptime(b_start, "%b %d %H:%M:%S %Y")))
 print(time.mktime(time.strptime(b_end, "%b %d %H:%M:%S %Y")))
 print(time.mktime(time.strptime(d_start, "%b %d %H:%M:%S %Y")))
 print(time.mktime(time.strptime(d_end, "%b %d %H:%M:%S %Y")))
-
+print(time.mktime(time.strptime(tim1, "%b %d %H:%M:%S %Y")))
 time1 = [1519999860.0, 1520004840.0]
 time2 = [1520015040.0, 1520020500.0]
 
 time3 = [1519222130.0, 1519224180.0]
 time4 = [1519236300.0, 1519239900.0]
-print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(1519222140.0)))
+print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(1518616860.0)))
 
 # flows = pd.read_csv('flows_ddos.csv')
 # flows = flows.iloc[0:106691,:]
@@ -65,12 +66,3 @@ print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(1519222140.0)))
 #     else:
 #         print('no such file:%s' % path)  # 则返回文件不存在
 
-record_name = r'E:\ddos\ddos{}.pt'.format(26)
-# 归一化
-record_flow = torch.load(record_name) / 255.0
-space_tensor = torch.zeros(784)
-size = 0
-for k in range(record_flow.size(0)):
-    x = torch.flatten(record_flow[k])
-    x1 = torch.flatten(record_flow[k], 0)
-    print(x == x1)

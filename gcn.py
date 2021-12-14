@@ -2,9 +2,8 @@ import itertools
 import os
 import os.path as osp
 import pickle
-import urllib
+import urllib3
 from collections import namedtuple
-
 import numpy as np
 import scipy.sparse as sp
 import torch
@@ -40,19 +39,21 @@ class CoraData(object):
 
     @property
     def data(self):
-        return self._x
+        return self._data
 
     def maybe_download(self):
         save_path = osp.join(self.data_root, "raw")
         for name in self.filenames:
             if not osp.exists(osp.join(save_path, name)):
-                self.down_data("{}/{}".format(self.download_url, name), save_path)
+                self.download_data("{}/{}".format(self.download_url, name), save_path)
 
     @staticmethod
     def download_data(url, save_path):
         if not osp.exists(save_path):
             os.makedirs(save_path)
-        data = urllib.request.urlopen(url)
+        http = urllib3.PoolManager()
+        r = http.request('GET', url)
+        data = r.data
 
         filename = osp.basename(url)
 
@@ -122,3 +123,107 @@ class CoraData(object):
 
 class GraphConvolution(nn.Module):
     def __init__(self,input_dim,output_dim,use_bias=True):
+        # 图卷积：Lsym*X*W
+        super(GraphConvolution,self).__init__()
+        self.input_dim=input_dim
+        self.output_dim=output_dim
+        self.use_bias=use_bias
+        self.weight=nn.Parameter(torch.Tensor(input_dim,output_dim))
+        if self.use_bias:
+            self.bias=nn.Parameter(torch.Tensor(output_dim))
+        else:
+            self.register_parameter('bias',None)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        init.kaiming_uniform_(self.weight)
+        if self.use_bias:
+            init.zeros_(self.bias)
+
+    def forward(self,adjacency,input_feature):
+        # 使用稀疏乘法
+        support=torch.mm(input_feature,self.weight)
+        outpot=torch.sparse.mm(adjacency,support)
+        if self.use_bias:
+            outpot+=self.bias
+        return outpot
+
+
+class GCcnNet(nn.Module):
+    def __init__(self,input_dim=1433):
+        super(GCcnNet,self).__init__()
+        self.gcn1=GraphConvolution(input_dim,16)
+        self.gcn2 = GraphConvolution(16, 7)
+
+    def forward(self,adjacency,feature):
+        h=F.relu(self.gcn1(adjacency,feature))
+        logits=self.gcn2(adjacency,h)
+        return logits
+
+
+def normalization(adjacency):
+    # 计算D^-0.5*A*D^-0.5
+    adjacency += sp.eye(adjacency.shape[0]) # 自连接
+    degree=np.array(adjacency.sum(1))
+    d_hat=sp.diags((np.power(degree,-0.5).flatten()))
+    return d_hat.dot(adjacency).dot(d_hat).tocoo()
+
+
+learning_rate =0.1
+weight_decay=5e-4
+epochs=30
+model=GCcnNet()
+criterion=nn.CrossEntropyLoss
+optimizer=optim.Adam(model.parameters(),lr=learning_rate,weight_decay=weight_decay)
+# load data
+dataset=CoraData().data
+x= dataset.x / dataset.x.sum(1,keepdims=True)
+tensor_x=torch.from_numpy(x)
+tensor_y=torch.from_numpy(dataset.y)
+tensor_train_mask=torch.from_numpy(dataset.train_mask)
+tensor_val_mask=torch.from_numpy(dataset.val_mask)
+tensor_test_mask=torch.from_numpy(dataset.test_mask)
+normalize_adjacency=normalization(dataset.adjacency)
+
+indices=torch.from_numpy(np.asarray([normalize_adjacency.row,normalize_adjacency.col]).astype('int64')).long()
+values=torch.from_numpy(normalize_adjacency.data.astypr(np.float32))
+tensor_adjacency=torch.sparse.FloatTensor(indices,values,(2708,2708))
+
+
+def train():
+    loss_history=[]
+    val_acc_history=[]
+    model.train()
+    train_y=tensor_y[tensor_train_mask]
+    for epoch in range(epochs):
+        logits=model(tensor_adjacency,tensor_x)
+        train_mask_logits=logits[tensor_train_mask]
+        loss = criterion(train_mask_logits,train_y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        train_acc=eval(tensor_train_mask)
+        val_acc=eval(tensor_val_mask)
+
+        loss_history.append(loss.item())
+        val_acc_history.append(val_acc.item())
+        print("Epoch {:03d}: Loss {:.4f},TrainAcc {:.4},ValAcc {:.4f}".format(epoch,loss.item(),train_acc.item(),val_acc.item()))
+
+    return loss_history,val_acc_history
+
+
+def eval(mask):
+    model.eval()
+    with torch.no_grad():
+        logits=model(tensor_adjacency,tensor_x)
+        test_mask_logits=logits[mask]
+        predict_y=test_mask_logits.max(1)[1]
+        accuracy=torch.eq(predict_y,tensor_y[mask]).float().mean()
+
+    return accuracy
+
+
+train()
+
+
+

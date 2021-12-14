@@ -17,9 +17,9 @@ def print_metrics(model_name, y_true, y_pred, times):
     print('{}指标表现：'.format(model_name))
     print('训练用时 {}s'.format(times))
     print('accuracy: {}'.format(accuracy))
-    print('precision: {},\t 平均： precision: {}'.format(precision, precision_score(y_true, y_pred, average='macro')))
-    print('recall: {},\t 平均： recall: {}'.format(recall, recall_score(y_true, y_pred, average='macro')))
-    print('f1_score: {},\t 平均： recall: {}'.format(f1, f1_score(y_true, y_pred, average='macro')))
+    print('precision: {},\t 平均： precision: {}'.format(precision, precision_score(y_true, y_pred, average='micro')))
+    print('recall: {},\t 平均： recall: {}'.format(recall, recall_score(y_true, y_pred, average='micro')))
+    print('f1_score: {},\t 平均： recall: {}'.format(f1, f1_score(y_true, y_pred, average='micro')))
     print( "||")
     print('------------------------------------------------------------')
 

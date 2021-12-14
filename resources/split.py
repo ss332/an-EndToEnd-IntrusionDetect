@@ -6,25 +6,26 @@ import pandas as pd
 import math
 import torch
 
-
-
 n_iters = 246000
 print_every = 5000
 
-files = [r'E:\Amazon\capBot-23.pcap',
-         r'E:\Amazon\capBot-17.pcap',
-         r'E:\Amazon\capBot-8.pcap',
-         r'E:\Amazon\capBot-12.pcap',
-         r'E:\Amazon\capBot-29.pcap',
-         r'E:\Amazon\capBot-30.pcap']
+files1 = [r'E:\Amazon\capBot-23.pcap',
+          r'E:\Amazon\capBot-17.pcap',
+          r'E:\Amazon\capBot-8.pcap',
+          r'E:\Amazon\capBot-12.pcap',
+          r'E:\Amazon\capBot-29.pcap',
+          r'E:\Amazon\capBot-30.pcap']
 
 files2 = [r'E:\Amazon\DDOS-LOIC-UDP.pcap',
-          r'E:\Amazon\DDOS-HOIC.pcap']
+          r'E:\Amazon\DDOS-HOIC.pcap',
+          r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.26',
+          r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.30']
 
-files3=[r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.23',
-        r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.26',
-        r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.29',
-        r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.30']
+wed_14_02 = [r'H:\ids2018\wed-14-02\UCAP172.31.69.25']
+
+matrix_name = r'E:\matrix\bruteForce\bruteForce{}.pt'
 
 
 def timeSince(since):
@@ -42,12 +43,14 @@ sequence = 0
 
 start = time.time()
 print('读取开始......')
-for file in files3:
+
+for file in wed_14_02:
     sequence += 1
     packets = all.PcapReader(file)
     print('file', sequence)
     hasnext = True
     i = 0
+
     while (hasnext):
         try:
             packet = packets.read_packet()
@@ -60,7 +63,12 @@ for file in files3:
             i = 2
         isSyn = 0
         isFin = 0
-        isTimeOut = 0
+        Duration = 0
+
+        if flowId > 50000 and float(packet.time)-1518631200.0 < 0:
+            if i % 5000 == 0:
+                print('skip')
+            continue
 
         if packet.haslayer('IP'):
             if packet.haslayer('TCP'):
@@ -71,16 +79,16 @@ for file in files3:
                     isFin = 1
 
                 flow = [packet['IP'].proto, packet['TCP'].sport, packet['TCP'].dport, packet['IP'].src,
-                        packet['IP'].dst, 0]
+                        packet['IP'].dst, 0, 0, 0]
                 re_flow = [packet['IP'].proto, packet['TCP'].dport, packet['TCP'].sport, packet['IP'].dst,
-                           packet['IP'].src, 0]
+                           packet['IP'].src, 0, 0, 0]
 
             elif packet.haslayer('UDP'):
 
                 flow = [packet['IP'].proto, packet['UDP'].sport, packet['UDP'].dport, packet['IP'].src,
-                        packet['IP'].dst, 0]
+                        packet['IP'].dst, 0, 0, 0]
                 re_flow = [packet['IP'].proto, packet['UDP'].dport, packet['UDP'].sport, packet['IP'].dst,
-                           packet['IP'].src, 0]
+                           packet['IP'].src, 0, 0, 0]
         else:
             continue
 
@@ -102,7 +110,8 @@ for file in files3:
 
         tmp_a = torch.tensor(tmp_a, dtype=torch.int32)
         arrays = tmp_a.view((1, 16, 16))
-        file_name = r'E:\ddos\ddos{}.pt'.format(flowId)
+        file_name = matrix_name.format(flowId)
+
         if i == 1:
             flows.append(flow)
             flows_time.append(packet.time)
@@ -114,8 +123,6 @@ for file in files3:
 
         for j in range(len(flows) - 1, -1, -1):
 
-            if (float(packet.time) - float(flows_time[j])) > 600:
-                isTimeOut = 1
             # 第一条数据
             if isSyn == 1:
                 flows.append(flow)
@@ -127,23 +134,27 @@ for file in files3:
 
             # 5元组一样，分两种情况
             if operator.eq(flows[j][:5], flow[:5]) or operator.eq(flows[j][:5], re_flow[:5]):
+                Duration = float(packet.time) - float(flows_time[j])
                 # 没有超时
-                if isTimeOut != 1:
+                if Duration <= 600:
                     isUsed = 1
-                    record_name = r'E:\ddos\ddos{}.pt'.format(j)
+                    record_name = matrix_name.format(j)
                     record_flow = torch.load(record_name)
                     # 超级数据包
                     flows[j][5] += 1
+                    flows[j][6] = Duration
+                    if isFin == 1:
+                        flows[j][7] = 1
                     if record_flow.size(0) > 32:
                         break
                     merge_flow = torch.cat((record_flow, arrays), 0)
                     torch.save(merge_flow, record_name)
-                    # print('flow %d 合并 flow %d' % (i, j))
                     break
                 # 超时了
                 else:
                     flows.append(flow)
                     flows_time.append(packet.time)
+                    flows[j][7] = Duration
                     torch.save(arrays, file_name)
                     flowId = flowId + 1
                     isUsed = 1
@@ -159,19 +170,21 @@ for file in files3:
             print('%d %d%% (%s)  %s' % (flowId + 1, 100 * (flowId + 1) / 4000, timeSince(start), flow))
 
         if (flowId + 1) % 2000 == 0:
-            print('%d %d%% (%s)  %s' % (flowId + 1, 100 * (flowId + 1) / 100001, timeSince(start), flows[len(flows) - 1]))
+            print(
+                '%d %d%% (%s)  %s' % (flowId + 1, 100 * (flowId + 1) / 100001, timeSince(start), flows[len(flows) - 1]))
 
         if flowId > 100001:
             break
 
-df = pd.DataFrame(flows, columns=['Protocol', 'SourcePort', 'DestinationPort', 'SourceIP', 'DestinationIP', 'isGiant'])
+df = pd.DataFrame(flows, columns=['Protocol', 'SourcePort', 'DestinationPort', 'SourceIP', 'DestinationIP', 'packets',
+                                  'Duration', 'isFin'])
 df['Time'] = flows_time
-df.to_csv('flows_benign.csv')
+df.to_csv('flows_bt.csv')
 
 
 def getSpace():
-    for i in range(180001):
-        record_name = r'E:\ddos\ddos{}.pt'.format(i)
+    for i in range():
+        record_name = matrix_name.format(i)
         # 归一化
         record_flow = torch.load(record_name) / 255.0
         space_tensor = torch.zeros(784)
@@ -183,14 +196,13 @@ def getSpace():
                 if x[0][j] != 0 and size < 784:
                     space_tensor[size] = x[0][j]
                     size = size + 1
-        space_name = r'E:\space2\space{}.pt'.format(i)
+        space_name = r'E:\space3\space{}.pt'.format(i)
         torch.save(space_tensor, space_name)
         if (i + 1) % 1000 == 0:
             print('%d %d%% (%s) ' % (i + 1, 100 * (i + 1) / 180001, timeSince(start),))
 
 
 print('读取结束......')
-
 
 # 切割tcp流：五元组(SourceIP, DestinationIP, SourcePort, DestinationPort, Protocol)
 # attack = 18.219.211.138
@@ -219,3 +231,5 @@ print('读取结束......')
 # DDOS ------------------
 # editcap -A "2018-02-21 22:09:00"  -B "2018-02-21 22:43:00"
 # editcap -A "2018-02-22 02:05:00"  -B "2018-02-22 03:05:00"
+# E:\Amazon\AWSCLIV2>aws s3 ls --no-sign-request "s3://cse-cic-ids2018" --recursive --human-readable --summarize
+# E:\Amazon\AWSCLIV2>aws s3 cp --no-sign-request "s3://cse-cic-ids2018/Original Network Traffic and Log data/Wednesday-14-02-2018/pcap.zip" H:\ids2018

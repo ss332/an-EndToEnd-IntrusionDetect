@@ -46,7 +46,6 @@ class Space(nn.Module):
         self.fc2 = nn.Linear(256, 64)
         self.fc3 = nn.Linear(64, 3)
 
-
     def forward(self, x, rnn_output):
         # 26*26 13
         x = self.pool(self.relu(self.conv1(x)))

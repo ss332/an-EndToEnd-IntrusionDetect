@@ -40,7 +40,8 @@ if __name__ == '__main__':
     names = ["Decision Tree",
              "Random Forest", "Neural Net", "AdaBoost",
              "Naive Bayes", "QDA",
-             "RBF SVM", "Linear SVM",
+             "RBF SVM",
+             # "Linear SVM",
              "Nearest Neighbors"]
     classifiers = [
         DecisionTreeClassifier(),
@@ -50,7 +51,7 @@ if __name__ == '__main__':
         GaussianNB(),
         QuadraticDiscriminantAnalysis(),
         make_pipeline(StandardScaler(), SVC(gamma='auto')),
-        make_pipeline(StandardScaler(), SVC(gamma='auto', kernel="linear", C=0.025)),
+        # make_pipeline(StandardScaler(), SVC(gamma='auto', kernel="linear", C=0.025)),
         KNeighborsClassifier(n_neighbors=5)]
 
     # train_sets(nslkddSet.nsl_set())

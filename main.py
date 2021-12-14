@@ -29,10 +29,13 @@ if __name__ == "__main__":
     #     plt.imshow(s_img.squeeze(), cmap="gray")
     # plt.savefig("visual.png")
     # plt.show()
+    space_img = r'E:\space2\space{}.pt'
+    s_img = torch.load(space_img)
+    print(s_img)
 
-    flows = pd.read_csv('flows2.csv')
-    print(flows[flows['label'] == 0].shape)
-    print(flows[flows['label'] == 1].shape)
-    print(flows[flows['label'] == 2].shape)
+    # flows = pd.read_csv('flows2.csv')
+    # print(flows[flows['label'] == 0].shape)
+    # print(flows[flows['label'] == 1].shape)
+    # print(flows[flows['label'] == 2].shape)
 
 
