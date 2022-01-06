@@ -40,12 +40,20 @@ def timeSince(since, percent):
 def getInputAndTargerTensor(id):
     id = flows["id"].iloc[id]
     flow_name = r'E:\bot\bot{}.pt'.format(id)
-    space_name = r'E:\space\space{}.pt'.format(id)
+
     # 归一化
     # n*16*16
-    input_tensor = torch.load(flow_name) / 255.0
+    input_tensor = torch.load(flow_name)
     # 1*784
-    space_tensor = torch.load(space_name)
+    space_tensor = torch.zeros(1024)
+
+    size = 0
+    for k in range(input_tensor.size(0)):
+        x = torch.flatten(input_tensor[k], 1)
+        for j in range(x.size(1)):
+            if x[0][j] != 0 and size < 1024:
+                space_tensor[size] = x[0][j]
+                size = size + 1
     space_tensor = space_tensor.view(1, 1, 28, 28)
     target_tensor = labelSet[id]
 

@@ -6,26 +6,84 @@ import pandas as pd
 import math
 import torch
 
-n_iters = 246000
-print_every = 5000
+""""
+切割tcp流：五元组(SourceIP, DestinationIP, SourcePort, DestinationPort, Protocol)
+--------------------------------------------------------
+目的mac地址6|源mac地址6|类型2|数据         46-1500|FCS4    |
+--------------------------------------------------------
+版本|首部长度|    区分服务1     |总长度2                    |
+       标识 2                |标志3bit|片偏移17           |
+生存时间1      |协议1         |首部校验和2                 |
+                         源地址4                         |
+                         目的地址4                       |
+                    可选字段(长度可变) 填充                |
+--------------------------------------------------------
+以太网数据帧格式：目的mac地址6，源mac地址6，协议类型2，数据（14字节）
+ip数据格式（20），在源IP地址4，目的IP地址4，之前有12字节，因此混淆这两个数据需要在[27,34]之间填0
+无论tcp（20）数据包还是udp（8）数据包2，源端口2，目的端口都紧随其后，因此最后是在[27,38]之间填0
+aws s3 ls --no-sign-request "s3://cse-cic-ids2018/Original Network Traffic and Log data/Friday-23-02-2018/pcap.zip" --recursive --human-readable --summarize
+aws s3 cp --no-sign-request "s3://cse-cic-ids2018/"
+"""
+# 1 5 6 7 8
+files1 = [r'H:\ids2018\wed-14-02\UCAP172.31.69.25',
+          r'H:\ids2018\wed-14-02\capEC2AMAZ-O4EL3NG-172.31.69.24',
+          r'H:\ids2018\wed-14-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'H:\ids2018\wed-14-02\capEC2AMAZ-O4EL3NG-172.31.69.28']  # ftp,ssh bruteforce
+files2 = [r'H:\ids2018\thurs-15-02\UCAP172.31.69.25',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.17',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.8',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.12',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.30']  # dos-goldenEye,slowloris
+files3 = [r'H:\ids2018\fri-16-02\UCAP172.31.69.25-part1.pcap',  # dos slowhttptest,hulk
+          r'H:\ids2018\fri-16-02\UCAP172.31.69.25-part2.pcap',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.24',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.26',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.28',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.30',
+          ]
+files4 = [r'E:\Amazon\tuesday-20-02\UCAP172.31.69.25',
+          r'E:\Amazon\tuesday-20-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'E:\Amazon\tuesday-20-02\capEC2AMAZ-O4EL3NG-172.31.69.24',
+          r'E:\Amazon\tuesday-20-02\capEC2AMAZ-O4EL3NG-172.31.69.28',
+          r'E:\Amazon\tuesday-20-02\capEC2AMAZ-O4EL3NG-172.31.69.29']  # dos loic-http
+files5 = [r'E:\Amazon\wednes-21-02\UCAP172.31.69.28-part1',  # dos loic-udp,hoic 耗时长
+          r'E:\Amazon\wednes-21-02\UCAP172.31.69.28-part2']
+files6 = [r'H:\ids2018\Thurs-22-02\UCAP172.31.69.28',
+          r'H:\ids2018\Thurs-22-02\UCAP172.31.69.21',
+          r'H:\ids2018\Thurs-22-02\UCAP172.31.69.22',
+          r'H:\ids2018\Thurs-22-02\UCAP172.31.69.25',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.17',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.14',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.10',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.8',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.6',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.12',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.26',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.30'
+          ]  # web,xss bruteforce,sql injection
 
-files1 = [r'E:\Amazon\capBot-23.pcap',
-          r'E:\Amazon\capBot-17.pcap',
-          r'E:\Amazon\capBot-8.pcap',
-          r'E:\Amazon\capBot-12.pcap',
-          r'E:\Amazon\capBot-29.pcap',
-          r'E:\Amazon\capBot-30.pcap']
+files7 = [r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.24-part2',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.17',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.26',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.30']  # infiltration
+files8 = [r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.23',  # bot
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.17',
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.8',
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.12',
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.30']
 
-files2 = [r'E:\Amazon\DDOS-LOIC-UDP.pcap',
-          r'E:\Amazon\DDOS-HOIC.pcap',
-          r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.23',
-          r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.26',
-          r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.29',
-          r'E:\Amazon\wednes-21-02\pcap\capEC2AMAZ-O4EL3NG-172.31.69.30']
-
-wed_14_02 = [r'H:\ids2018\wed-14-02\UCAP172.31.69.25']
-
-matrix_name = r'E:\matrix\bruteForce\bruteForce{}.pt'
+sesseion_num = 100000
+# 缓存的大小
+cahe_length = 200
+# 统计io次数
+io_count = 0
 
 
 def timeSince(since):
@@ -36,200 +94,190 @@ def timeSince(since):
     return '%dm %ds' % (m, s)
 
 
-flows = []
-flows_time = []
-flowId = 0
-sequence = 0
+def update_cache(list, arrays, id, seq):
+    if len(list) < cahe_length:
+        list.insert(0, arrays)
+    else:
+        file_name = r'D:\sessions\files{}\session{}.pt'.format(seq, id - cahe_length)
 
-start = time.time()
-print('读取开始......')
+        torch.save(list[len(list) - 1], file_name)
+        # 老的保存，新的插入
+        del list[len(list) - 1]
+        list.insert(0, arrays)
+    if id > sesseion_num:
+        a = cahe_length
+        for session in list:
+            file_name = r'D:\sessions\files{}\session{}.pt'.format(seq, id - a)
+            torch.save(session, file_name)
+            a = a - 1
 
-for file in wed_14_02:
-    sequence += 1
-    packets = all.PcapReader(file)
-    print('file', sequence)
-    hasnext = True
-    i = 0
 
-    while (hasnext):
-        try:
-            packet = packets.read_packet()
-        except:
-            packets.close()
-            hasnext = False
-            continue
-        i = i + 1
-        if i >= 1000000:
-            i = 2
-        isSyn = 0
-        isFin = 0
-        Duration = 0
+def check_cache(cache_sessions):
+    cool = 0
+    for session in cache_sessions:
+        if session.size(0) < 32:
+            cool = 1
 
-        if flowId > 50000 and float(packet.time)-1518631200.0 < 0:
-            if i % 5000 == 0:
-                print('skip')
-            continue
+    return cool
 
-        if packet.haslayer('IP'):
-            if packet.haslayer('TCP'):
-                flags = str(packet['TCP'].flags)
-                if re.search('SEC', flags) is not None:
-                    isSn = 1
-                if re.search('F', flags) is not None:
-                    isFin = 1
 
-                flow = [packet['IP'].proto, packet['TCP'].sport, packet['TCP'].dport, packet['IP'].src,
-                        packet['IP'].dst, 0, 0, 0]
-                re_flow = [packet['IP'].proto, packet['TCP'].dport, packet['TCP'].sport, packet['IP'].dst,
-                           packet['IP'].src, 0, 0, 0]
+def split(files, seq, count_io=0):
+    # 提高速度，保有最近n个的session矩阵,减少IO读取
+    cache_sessions = []
+    flows = []
+    flows_time = []
+    flow_id = 0
+    sequence = 0
 
-            elif packet.haslayer('UDP'):
+    start = time.time()
+    print('处理文件{}读取开始......,'.format(seq))
 
-                flow = [packet['IP'].proto, packet['UDP'].sport, packet['UDP'].dport, packet['IP'].src,
-                        packet['IP'].dst, 0, 0, 0]
-                re_flow = [packet['IP'].proto, packet['UDP'].dport, packet['UDP'].sport, packet['IP'].dst,
-                           packet['IP'].src, 0, 0, 0]
-        else:
-            continue
-
-        tmp_a = []
-        size = 0
-
-        for byte in bytes(packet):
-            # if 26 < size < 39:
-            #     tmp_a.append(0)
-            # else:
-            tmp_a.append(byte)
-            size = size + 1
-            if size == 256:
-                break
-        if size <= 256:
-            while size < 256:
-                tmp_a.append(0)
-                size = size + 1
-
-        tmp_a = torch.tensor(tmp_a, dtype=torch.int32)
-        arrays = tmp_a.view((1, 16, 16))
-        file_name = matrix_name.format(flowId)
-
-        if i == 1:
-            flows.append(flow)
-            flows_time.append(packet.time)
-            torch.save(arrays, file_name)
-            print('完成flow', flowId)
-            flowId = flowId + 1
-            continue
-        isUsed = 0
-
-        for j in range(len(flows) - 1, -1, -1):
-
-            # 第一条数据
-            if isSyn == 1:
-                flows.append(flow)
-                flows_time.append(packet.time)
-                torch.save(arrays, file_name)
-                flowId = flowId + 1
-                isUsed = 1
-                break
-
-            # 5元组一样，分两种情况
-            if operator.eq(flows[j][:5], flow[:5]) or operator.eq(flows[j][:5], re_flow[:5]):
-                Duration = float(packet.time) - float(flows_time[j])
-                # 没有超时
-                if Duration <= 600:
-                    isUsed = 1
-                    record_name = matrix_name.format(j)
-                    record_flow = torch.load(record_name)
-                    # 超级数据包
-                    flows[j][5] += 1
-                    flows[j][6] = Duration
-                    if isFin == 1:
-                        flows[j][7] = 1
-                    if record_flow.size(0) > 32:
-                        break
-                    merge_flow = torch.cat((record_flow, arrays), 0)
-                    torch.save(merge_flow, record_name)
-                    break
-                # 超时了
-                else:
-                    flows.append(flow)
-                    flows_time.append(packet.time)
-                    flows[j][7] = Duration
-                    torch.save(arrays, file_name)
-                    flowId = flowId + 1
-                    isUsed = 1
-                    break
-
-        if isUsed == 0:
-            flows.append(flow)
-            flows_time.append(packet.time)
-            torch.save(arrays, file_name)
-            flowId = flowId + 1
-
-        if sequence != 2 and (i + 1) % 5000 == 0:
-            print('%d %d%% (%s)  %s' % (flowId + 1, 100 * (flowId + 1) / 4000, timeSince(start), flow))
-
-        if (flowId + 1) % 2000 == 0:
-            print(
-                '%d %d%% (%s)  %s' % (flowId + 1, 100 * (flowId + 1) / 100001, timeSince(start), flows[len(flows) - 1]))
-
-        if flowId > 100001:
+    for file in files:
+        if flow_id > sesseion_num:
             break
 
-df = pd.DataFrame(flows, columns=['Protocol', 'SourcePort', 'DestinationPort', 'SourceIP', 'DestinationIP', 'packets',
-                                  'Duration', 'isFin'])
-df['Time'] = flows_time
-df.to_csv('flows_bt.csv')
+        sequence += 1
+        packets = all.PcapReader(file)
+        print('file', sequence)
+        hasnext = True
+        i = 0
+
+        while hasnext:
+            try:
+                packet = packets.read_packet()
+            except:
+                packets.close()
+                hasnext = False
+                continue
+            i = i + 1
+            if i > 1000000:
+                i = 2
+            isSyn = 0
+            isFin = 0
+            # files1 :1518631260.0 特殊控制 files3: 1518803100.0 files5：1519236300 1519222140
+            #
+            if flow_id > 50000 and float(packet.time) - 1518803100 < 0:
+                if i % 50000 == 0:
+                    print('skip', i)
+                continue
+
+            if packet.haslayer('IP'):
+                if packet.haslayer('TCP'):
+                    flags = str(packet['TCP'].flags)
+                    # # tcp三次握手第一个syn包，ack=0，因此flags里不应有A
+                    # if re.search('S', flags) is not None and re.search('A', flags) is None:
+                    #     isSyn = 1
+                    if re.search('F', flags) is not None:
+                        isFin = 1
+
+                    flow = [packet['IP'].proto, packet['TCP'].sport, packet['TCP'].dport, packet['IP'].src,
+                            packet['IP'].dst, 1, 0, 0, 0]
+                    re_flow = [packet['IP'].proto, packet['TCP'].dport, packet['TCP'].sport, packet['IP'].dst,
+                               packet['IP'].src, 1, 0, 0, 0]
+
+                elif packet.haslayer('UDP'):
+
+                    flow = [packet['IP'].proto, packet['UDP'].sport, packet['UDP'].dport, packet['IP'].src,
+                            packet['IP'].dst, 1, 0, 0, 0]
+                    re_flow = [packet['IP'].proto, packet['UDP'].dport, packet['UDP'].sport, packet['IP'].dst,
+                               packet['IP'].src, 1, 0, 0, 0]
+            else:
+                continue
+
+            tmp_a = torch.zeros(320)
+            s = 0
+            data = bytes(packet)
+            flow[8] = len(data)
+
+            for byte in data:
+                tmp_a[s] = byte
+                s = s + 1
+                if s == 320:
+                    break
+            # 归一化
+            arrays = tmp_a.view((1, 320)) / 255.0
+
+            if i == 1:
+                flows.append(flow)
+                flows_time.append(packet.time)
+                update_cache(cache_sessions, arrays, flow_id, seq)
+                print('完成flow', flow_id)
+                flow_id = flow_id + 1
+                continue
+            isUsed = 0
+            length = len(flows)
+            for j in range(length - 1, -1, -1):
+
+                # 5元组一样，分两种情况
+                if operator.eq(flows[j][:5], flow[:5]) or operator.eq(flows[j][:5], re_flow[:5]):
+                    duration = float(packet.time) - float(flows_time[j])
+                    timeout = duration - flows[j][6]
+                    # 没有超时
+                    if timeout <= 600:
+                        isUsed = 1
+                        record_name = r'D:\sessions\files{}\session{}.pt'.format(seq, j)
+                        flows[j][5] += 1
+                        flows[j][6] = duration
+                        if isFin == 1:
+                            flows[j][7] = 1
+                        flows[j][8] += flow[8]
+                        if length - 1 >= j > length - (cahe_length + 1):
+                            record_flow = cache_sessions[length - 1 - j]
+                            if record_flow.size(0) > 32:
+                                break
+                            merge_flow = torch.cat((record_flow, arrays), 0)
+                            cache_sessions[length - 1 - j] = merge_flow
+                        else:
+                            record_flow = torch.load(record_name)
+                            count_io += 1
+                            if record_flow.size(0) > 32:
+                                break
+                            merge_flow = torch.cat((record_flow, arrays), 0)
+
+                            torch.save(merge_flow, record_name)
+                        # 超级数据包
+                        break
+                    # 超时了
+                    else:
+                        flows.append(flow)
+                        flows_time.append(packet.time)
+                        flows[j][6] = duration
+                        update_cache(cache_sessions, arrays, flow_id, seq)
+                        count_io += 1
+                        flow_id = flow_id + 1
+                        isUsed = 1
+                        break
+
+            if isUsed == 0:
+                flows.append(flow)
+                flows_time.append(packet.time)
+                update_cache(cache_sessions, arrays, flow_id, seq)
+                count_io += 1
+                flow_id = flow_id + 1
+            # 主要针对数据包较多的情况，如ddos-udp
+            if sequence == 1 and i % 5000 == 0:
+                print('%d %d%% (%s)  %s %s %d' % (flow_id, flow_id / 40, timeSince(start), flow, packet.time, count_io))
+            # 一般情况打印进度
+            if flow_id % 2000 == 0:
+                print('%d %d%% (%s)  %s' % (
+                    flow_id, flow_id / 1000, timeSince(start), flows[len(flows) - 1]))
+            # 只取10w个会话
+            # if flow_id > 300 and sequence == 1:
+            #     break
+            if flow_id > sesseion_num:
+                update_cache(cache_sessions, arrays, flow_id, seq)
+                break
+
+    update_cache(cache_sessions, None, flow_id, seq)
+    df = pd.DataFrame(flows,
+                      columns=['protocol', 'sourcePort', 'destinationPort', 'sourceIP', 'destinationIP', 'packets',
+                               'duration', 'isFin', 'bytes'])
+
+    df['mean_bytes'] = (df['bytes'] / df['packets'])
+    df['time'] = flows_time
+
+    df.to_csv(f'../files/file_{seq}.csv')
+    print('读取结束......')
 
 
-def getSpace():
-    for i in range():
-        record_name = matrix_name.format(i)
-        # 归一化
-        record_flow = torch.load(record_name) / 255.0
-        space_tensor = torch.zeros(784)
-
-        size = 0
-        for k in range(record_flow.size(0)):
-            x = torch.flatten(record_flow[k], 1)
-            for j in range(x.size(1)):
-                if x[0][j] != 0 and size < 784:
-                    space_tensor[size] = x[0][j]
-                    size = size + 1
-        space_name = r'E:\space3\space{}.pt'.format(i)
-        torch.save(space_tensor, space_name)
-        if (i + 1) % 1000 == 0:
-            print('%d %d%% (%s) ' % (i + 1, 100 * (i + 1) / 180001, timeSince(start),))
-
-
-print('读取结束......')
-
-# 切割tcp流：五元组(SourceIP, DestinationIP, SourcePort, DestinationPort, Protocol)
-# attack = 18.219.211.138
-# --------------------------------------------------------
-# 目的mac地址6|源mac地址6|类型2|数据         46-1500|FCS4    |
-# --------------------------------------------------------
-# 版本|首部长度|    区分服务1     |总长度2                    |
-#        标识 2                |标志3bit|片偏移17           |
-# 生存时间1      |协议1         |首部校验和2                 |
-#                          源地址4                         |
-#                          目的地址4                       |
-#                     可选字段(长度可变) 填充                |
-# --------------------------------------------------------
-# 以太网数据帧格式：目的mac地址6，源mac地址6，协议类型2，数据（14字节）
-# ip数据格式（20），在源IP地址4，目的IP地址4，之前有12字节，因此混淆这两个数据需要在[27,34]之间填0
-# 无论tcp（20）数据包还是udp（8）数据包2，源端口2，目的端口都紧随其后，因此最后是在[27,38]之间填0
-
-# victim BOTNET
-# -A "2018-03-02 22:11:00"  -B "2018-03-02 23:34:00"
-# -A "2018-03-03 02:24:00"  -B "2018-03-03 03:55:00"
-# 选取了4个文件
-# capEC2AMAZ-O4EL3NG-172.31.69.23
-# capEC2AMAZ-O4EL3NG-172.31.69.8
-# capEC2AMAZ-O4EL3NG-172.31.69.12
-# capEC2AMAZ-O4EL3NG-172.31.69.30
-# DDOS ------------------
-# editcap -A "2018-02-21 22:09:00"  -B "2018-02-21 22:43:00"
-# editcap -A "2018-02-22 02:05:00"  -B "2018-02-22 03:05:00"
-# E:\Amazon\AWSCLIV2>aws s3 ls --no-sign-request "s3://cse-cic-ids2018" --recursive --human-readable --summarize
-# E:\Amazon\AWSCLIV2>aws s3 cp --no-sign-request "s3://cse-cic-ids2018/Original Network Traffic and Log data/Wednesday-14-02-2018/pcap.zip" H:\ids2018
+split(files3, 3)

@@ -13,7 +13,7 @@ def ids2018():
     top_limit = 0.1
     ratio = 3
     df2 = pd.read_csv(r"E:\data\CICIDS2018\Wednesday-21-02-2018_TrafficForML_CICFlowMeter.txt")
-    df = pd.read_csv(r"E:\data\CICIDS2018\Friday-02-03-2018_TrafficForML_CICFlowMeter.txt")
+    df = pd.read_csv(r"E:\data\CICIDS2018\Friday-02-03-2018_TrafficForML_CICFlowMeter.txt",)
     bot_ddos = pd.concat([df, df2], axis=0)
     print(bot_ddos.shape)
 
@@ -51,10 +51,13 @@ def ids2018():
     x_train = train_df.drop(labels=['Flow Byts/s', 'Flow Pkts/s', 'Dst Port', 'Protocol', 'Timestamp', 'Label'], axis=1)
     y_train = train_df['Label']
     y_train = y_train.replace({'Benign': 0, 'DDOS attack-LOIC-UDP': 1, 'DDOS attack-HOIC': 2, 'Bot': 3})
+    # y_train = y_train.replace({'Benign': 0, 'DoS attacks - SlowHTTPTest': 1, ' DoS attacks - Hulk': 2, 'Bot': 3})
+
 
     x_test = test_df.drop(labels=['Flow Byts/s', 'Flow Pkts/s', 'Dst Port', 'Protocol', 'Timestamp', 'Label'], axis=1)
     y_test = test_df['Label']
     y_test = y_test.replace({'Benign': 0, 'DDOS attack-LOIC-UDP': 1, 'DDOS attack-HOIC': 2, 'Bot': 3})
+    # y_test = y_train.replace({'Benign': 0, 'DoS attacks - SlowHTTPTest': 1, ' DoS attacks - Hulk': 2, 'Bot': 3})
 
     return x_train, y_train, x_test, y_test
 

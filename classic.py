@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     # train_sets(nslkddSet.nsl_set())
     # train_sets(unswSet.unsw_set())
-    # train_sets(ids2018Set.ids2018())
+    train_sets(ids2018Set.ids2018())
 
 
 
