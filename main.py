@@ -7,34 +7,36 @@ import matplotlib.pyplot as plt
 from scapy import all
 import decimal
 import zlib
+import seaborn as sns
 
 if __name__ == "__main__":
 
     ids = [11217,22432,29953,43350,67527,50970]
-    ids2 = [2430, 4218, 24732, 28923, 29890, 99432]
-    ids3=[3574,6903,47782,63537,70211,]
+    ids2 = [2430, 4218, 24732, 28923, 29890, 31629,27442,30203,32629]
+    ids3=[281,8423,13386,15187,17086,27665]
 
     ids45= [21928, 35504, 48418,77, 90, 154, 2300, 53075, 91768]
     ids6 = [362, 372, 383, 991, 1043, 1007,1391,1402,1415]
 
-    ids78 = [362, 372, 383, 991,16103, 46559, 76055]
+    ids78 = [15424, 38895, 88287, 17968, 47267, 92242]
 
     label = ['FTP-BruteForce', 'SSH-BruteForce']
-    label2 = ['DoS-GoldenEye', 'DoS-Slowloris']
+    label2 = ['DoS-GoldenEye', 'DoS-Slowloris','DoS-Slowloris']
     label3 = ['DoS-SlowHTTPTest', 'DoS-Hulk']
 
     label5 = ['DDoS LOIC-HTTP','DDoS-LOIC-UDP', 'DDoS-HOIC']
     label6=['Brute Force-Web','Brute Force-XSS','SQL Injection']
+
     label78 = ['Infiltration','Bot']
 
-    figure = plt.figure(figsize=(6, 6))
+    figure = plt.figure(figsize=(6, 4))
     a = 0
-    for i in range(9):
-        if i<3:
-            flow_name = r'D:\sessions\files7\session{}.pt'.format(ids78[i])
-        else:
-            flow_name = r'D:\sessions\files8\session{}.pt'.format(ids78[i])
-
+    for i in range(6):
+        # if i<3:
+        #     flow_name = r'D:\sessions\files7\session{}.pt'.format(ids78[i])
+        # else:
+        #     flow_name = r'D:\sessions\files8\session{}.pt'.format(ids78[i])
+        flow_name = r'D:\sessions\files3\session{}.pt'.format(ids3[i])
         input_tensor = torch.load(flow_name)
         space_tensor = torch.zeros(1024)
 
@@ -50,10 +52,10 @@ if __name__ == "__main__":
 
         a=i//3
         s_img = space_tensor.view(32, -1)
-        plt.title(label5[a])
+        plt.title(label3[a])
         plt.axis("off")
         plt.imshow(s_img.squeeze(), cmap="gray")
-    plt.savefig("visual78.png")
+    plt.savefig("visual3.png")
     plt.show()
 
 
