@@ -11,12 +11,14 @@ import spacetime
 import numpy as np
 
 warnings.filterwarnings("ignore")
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'Using {device} device')
 
 # flows数据记录表，表明每一个流，具体数据根据id取得
 flows = pd.read_csv('all_flows.txt')
 flows = shuffle(flows)
 # 标签集
-labelSet = flows["label"]
+labelSet = flows["label"].to(device)
 print(flows["label"].count())
 set_size = 800000
 train_size = 560000
@@ -45,10 +47,10 @@ def getInputAndTargerTensor(i):
 
     # 归一化
     # n*320
-    input_tensor = torch.load(flow_name)
+    input_tensor = torch.load(flow_name).to(device)
 
     # 1*1024
-    space_tensor = torch.zeros(1024)
+    space_tensor = torch.zeros(1024,device=device)
     size = 0
 
     for k in range(input_tensor.size(0)):
@@ -97,8 +99,8 @@ all_losses = []
 start = time.time()
 
 hidden_size = 320
-timeRnn_model = spacetime.RNN(hidden_size)
-spaceCnn_model = spacetime.Space()
+timeRnn_model = spacetime.RNN(hidden_size).to(device)
+spaceCnn_model = spacetime.Space().to(device)
 
 
 # 训练，循环训练集10个纪元
