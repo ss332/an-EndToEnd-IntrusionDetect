@@ -27,7 +27,8 @@ plot_every = 500
 # 记录损失曲线
 all_losses = []
 start = time.time()
-
+batch=32
+T=train_size/batch
 hidden_size = 320
 
 
@@ -49,7 +50,7 @@ def trainIter(model, loader):
         iter=0
         for session, packets, p_len, label_idx in loader:
 
-            pred = model(session, packets, p_len)
+            pred = model(session.to(device), packets.to(device), p_len.to(device))
 
             optimizer.zero_grad()
 
@@ -65,9 +66,8 @@ def trainIter(model, loader):
             print_loss += loss
 
             if (iter + 1) % print_every == 0:  # print every 5000 mini-batches
-                print('Epoch[%d,%5d, %d%%] -%s /step  -loss: %.4f ' % (
-                    epoch + 1, iter + 1, (iter + 1) / (train_size/32) * 100, timeSince(start, iter / train_size),
-                    print_loss / print_every))
+                print('Epoch[%d,%5d/%d, %d%%] -%s /step  -loss: %.4f ' % (
+                    epoch + 1, iter + 1,T, (iter + 1) / T * 100, timeSince(start, iter / T), print_loss / print_every))
                 print_loss = 0
 
             if iter % plot_every == 0:

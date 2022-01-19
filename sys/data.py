@@ -3,7 +3,6 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 class IDSDataset(Dataset):
@@ -22,7 +21,7 @@ class IDSDataset(Dataset):
                                 r'session{}.pt'.format(self.sessions_labels.iloc[idx, 0]))
         session = torch.load(img_path)
         label = self.sessions_labels.iloc[idx, 2]
-        label = torch.tensor(label, device=device)
+        label = torch.tensor(label)
         if self.transform:
             image = self.transform(session)
         if self.target_transform:
@@ -40,10 +39,10 @@ class IDSDataset(Dataset):
             l = 32
         for i in range(l):
             vec[i] = session[i]
-        return vec, torch.tensor(l, device=device)
+        return vec, torch.tensor(l)
 
     def encode_sessions(self, session):
-        session_tensor = torch.zeros(1024, device=device)
+        session_tensor = torch.zeros(1024)
         size = 0
         for k in range(session.size(0)):
             x = session[k]
