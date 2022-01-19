@@ -17,12 +17,12 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings("ignore")
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(f'Using {device} device')
+
 
 set_size = 800000
 train_size = 560000
 test_size = 240000
-print_every = 2000
+print_every = 200
 plot_every = 500
 # 记录损失曲线
 all_losses = []
@@ -34,9 +34,9 @@ hidden_size = 320
 # 训练，循环训练集10个纪元
 def trainIter(model, loader):
     print('Training start!')
-
+    model = model.to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters())
 
     # 学习率衰减计划，按cos曲线衰减，最大周期为10
 
@@ -48,13 +48,14 @@ def trainIter(model, loader):
         print_loss = 0.0
         iter=0
         for session, packets, p_len, label_idx in loader:
-            predict = model(session, packets, p_len)
+
+            pred = model(session, packets, p_len)
 
             optimizer.zero_grad()
 
             loss = 0
 
-            loss += criterion(predict, label_idx)
+            loss += criterion(pred, label_idx)
 
             loss.backward()
             optimizer.step()
@@ -82,19 +83,23 @@ def trainIter(model, loader):
 
 # 验证
 # 用测试集验证，求出混淆矩阵
-def evaluate(model, c):
+def evaluate(model, c,loader):
     total = 0
 
     list = np.zeros((c, c))
 
-    # with torch.no_grad():
-    # for i in range(70000, 100000):
+    with torch.no_grad():
+        for session, packets, p_len, label_idx in loader:
 
-    # top_n, top_i = space_output.topk(1)
-    # predicted = top_i[0].item()
-    #
-    # total = total + 1
-    # list[target_tensor][predicted] += 1
+            pred = model(session, packets, p_len)
+
+            top_n, top_i = pred.topk(1)
+            # predicted = top_i[0].item()
+
+            total = total + 32
+            for p,l in zip(top_i,label_idx):
+
+                list[l.item()][p] += 1
 
     caculate(list, c, total)
 
@@ -119,25 +124,27 @@ def caculate(index, C, total):
 
 
 def main():
-    model = model_v2.ArcNet()
+    print(f'Using {device} device')
+    net = nn.DataParallel(model_v2.ArcNet()).to(device)
     # # 开始！
     path = r'D:\sessions'
     training_data = data.IDSDataset('all_train.csv', path, )
     test_data = data.IDSDataset('all_test.csv', path)
 
-    train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True)
-    test_dataloader = DataLoader(test_data, batch_size=32, shuffle=True)
+    train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True,num_workers=4)
+    test_dataloader = DataLoader(test_data, batch_size=32, shuffle=True,num_workers=4)
 
-    trainIter(model, train_dataloader)
+    trainIter(net, train_dataloader)
+    evaluate(net,15,test_dataloader)
 
-    torch.save(model.state_dict(), 'model.pth')
+    torch.save(net.state_dict(), 'model.pth')
 
-    # model.load_state_dict(torch.load('r_model.pth'))
+    # model.load_state_dict(torch.load('model.pth'))
 
     plt.plot(all_losses)
     torch.save(all_losses, 'losses.pt')
     plt.show()
-    evaluate(model, 15)
+
 
 
 if __name__ == '__main__':

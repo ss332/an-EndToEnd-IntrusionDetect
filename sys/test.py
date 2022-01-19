@@ -17,20 +17,36 @@ def tile_2d_over_nd(feature_vector, feature_map):
     tiled = feature_vector.view(n, c, *([1] * spatial_size)).expand_as(feature_map)
     return tiled
 
-feature_vector=torch.tensor([0,1,2,3,4,5,6,7,8,9]).view(1,-1)
-input=torch.randn((1,10,4,4))
-# tile=tile_2d_over_nd(feature_vector,feature_map)
-#
-# print(tile.shape)
-# print(tile)
-# print(feature_map+tile)
-n, c = input.size()[:2]
-input = input.view(n, 1, c, -1)  # [n, 1, c, s]=
-attention=torch.randn((1,2,16))
-attention = F.softmax(attention, dim=-1).unsqueeze(2)  # [n, g, 1, s]=[n,2,1,16]
-weighted = attention * input  # [n, g, v, s] [n,g,1,s]*[n,1,c,s]=[n,g,,16]
-weighted_mean = weighted.sum(dim=-1)  # [n, g, v]
-print(input.shape)
-print(weighted.shape)
-print(weighted_mean.shape)
-print(weighted_mean)
+# feature_vector=torch.tensor([0,1,2,3,4,5,6,7,8,9]).view(1,-1)
+# input=torch.randn((1,10,4,4))
+# # tile=tile_2d_over_nd(feature_vector,feature_map)
+# #
+# # print(tile.shape)
+# # print(tile)
+# # print(feature_map+tile)
+# n, c = input.size()[:2]
+# input = input.view(n, 1, c, -1)  # [n, 1, c, s]=
+# attention=torch.randn((1,2,16))
+# attention = F.softmax(attention, dim=-1).unsqueeze(2)  # [n, g, 1, s]=[n,2,1,16]
+# weighted = attention * input  # [n, g, v, s] [n,g,1,s]*[n,1,c,s]=[n,g,,16]
+# weighted_mean = weighted.sum(dim=-1)  # [n, g, v]
+# print(input.shape)
+# print(weighted.shape)
+# print(weighted_mean.shape)
+# print(weighted_mean)
+
+# a=torch.zeros((5,320))
+# c=torch.zeros((32,320))
+# b=a.expand_as(c)
+# print(b.shape)
+
+pred=torch.randn((3,10))
+top_n, top_i = pred.topk(1)
+print(top_n,top_i)
+predicted = top_i[0].item()
+print(predicted)
+label_idx=torch.zeros(3)
+
+for p,l in zip(top_i,label_idx):
+    print(p.item(),int(l.item()))
+
