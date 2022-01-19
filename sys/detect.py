@@ -7,7 +7,7 @@ from sklearn.utils import shuffle
 import math
 import torch.optim as optim
 import warnings
-import spacetime
+import model_v1
 import numpy as np
 
 warnings.filterwarnings("ignore")
@@ -60,7 +60,7 @@ def getInputAndTargerTensor(i):
                 space_tensor[size] = x[j]
                 size = size + 1
 
-    # (b,c,w,h)
+    # (n,c,w,h)
     space_tensor = space_tensor.view(1, 1, 32, 32)
     target_tensor = labelSet[id]
 
@@ -99,8 +99,8 @@ all_losses = []
 start = time.time()
 
 hidden_size = 320
-timeRnn_model = spacetime.RNN(hidden_size).to(device)
-spaceCnn_model = spacetime.Space().to(device)
+timeRnn_model = model_v1.RNN(hidden_size).to(device)
+spaceCnn_model = model_v1.Space().to(device)
 
 
 # 训练，循环训练集10个纪元

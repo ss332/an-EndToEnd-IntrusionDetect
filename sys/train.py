@@ -1,0 +1,144 @@
+import matplotlib.pyplot as plt
+import torch.nn as nn
+import torch
+import time
+import torch.optim as optim
+import model_v2
+import numpy as np
+from utils import timeSince
+import torch
+from torch.utils.data import Dataset
+from torchvision import datasets
+from torchvision.transforms import ToTensor
+import matplotlib.pyplot as plt
+import data
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+import warnings
+warnings.filterwarnings("ignore")
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'Using {device} device')
+
+set_size = 800000
+train_size = 560000
+test_size = 240000
+print_every = 2000
+plot_every = 500
+# 记录损失曲线
+all_losses = []
+start = time.time()
+
+hidden_size = 320
+
+
+# 训练，循环训练集10个纪元
+def trainIter(model, loader):
+    print('Training start!')
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    # 学习率衰减计划，按cos曲线衰减，最大周期为10
+
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-7)
+
+    for epoch in range(10):  # loop over the dataset multiple times
+
+        plot_loss = 0.0
+        print_loss = 0.0
+        iter=0
+        for session, packets, p_len, label_idx in loader:
+            predict = model(session, packets, p_len)
+
+            optimizer.zero_grad()
+
+            loss = 0
+
+            loss += criterion(predict, label_idx)
+
+            loss.backward()
+            optimizer.step()
+
+            loss = loss.item()
+            plot_loss += loss
+            print_loss += loss
+
+            if (iter + 1) % print_every == 0:  # print every 5000 mini-batches
+                print('Epoch[%d,%5d, %d%%] -%s /step  -loss: %.4f ' % (
+                    epoch + 1, iter + 1, (iter + 1) / (train_size/32) * 100, timeSince(start, iter / train_size),
+                    print_loss / print_every))
+                print_loss = 0
+
+            if iter % plot_every == 0:
+                all_losses.append((plot_loss / plot_every))
+                plot_loss = 0
+
+            iter+=1
+
+        scheduler.step()
+
+    print('Training Finished')
+
+
+# 验证
+# 用测试集验证，求出混淆矩阵
+def evaluate(model, c):
+    total = 0
+
+    list = np.zeros((c, c))
+
+    # with torch.no_grad():
+    # for i in range(70000, 100000):
+
+    # top_n, top_i = space_output.topk(1)
+    # predicted = top_i[0].item()
+    #
+    # total = total + 1
+    # list[target_tensor][predicted] += 1
+
+    caculate(list, c, total)
+
+
+def caculate(index, C, total):
+    accuracy = 0
+    recall = []
+    precision = []
+    f1_score = []
+    for c in range(C):
+        accuracy = accuracy + index[c][c]
+        print(index[c][c])
+        recall.append(100 * index[c][c] / (np.sum(index, axis=1)[c]))
+        precision.append(100 * index[c][c] / (np.sum(index, axis=0)[c]))
+        f1_score.append(2 * precision[c] * recall[c] / (precision[c] + recall[c]))
+
+    print('测试集共计%d ,比例为0.3' % (train_size))
+    print('Accuracy :', 100 * accuracy / total, accuracy)
+    print('recall :', recall)
+    print('precision :', precision)
+    print('f1Score : ', f1_score)
+
+
+def main():
+    model = model_v2.ArcNet()
+    # # 开始！
+    path = r'D:\sessions'
+    training_data = data.IDSDataset('all_train.csv', path, )
+    test_data = data.IDSDataset('all_test.csv', path)
+
+    train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True)
+    test_dataloader = DataLoader(test_data, batch_size=32, shuffle=True)
+
+    trainIter(model, train_dataloader)
+
+    torch.save(model.state_dict(), 'model.pth')
+
+    # model.load_state_dict(torch.load('r_model.pth'))
+
+    plt.plot(all_losses)
+    torch.save(all_losses, 'losses.pt')
+    plt.show()
+    evaluate(model, 15)
+
+
+if __name__ == '__main__':
+    main()
