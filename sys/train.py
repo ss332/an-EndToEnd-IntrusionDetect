@@ -1,34 +1,29 @@
-import matplotlib.pyplot as plt
 import torch.nn as nn
-import torch
 import time
 import torch.optim as optim
 import model_v2
 import numpy as np
 from utils import timeSince
 import torch
-from torch.utils.data import Dataset
-from torchvision import datasets
-from torchvision.transforms import ToTensor
 import matplotlib.pyplot as plt
 import data
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 import warnings
+import os
+from matplotlib import ticker
 warnings.filterwarnings("ignore")
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
 
 set_size = 800000
 train_size = 560000
 test_size = 240000
 print_every = 200
-plot_every = 500
+plot_every =  200
 # 记录损失曲线
 all_losses = []
-start = time.time()
-batch=32
-T=train_size/batch
+all_start = time.time()
+batch = 32
+T = train_size / batch
 hidden_size = 320
 
 
@@ -36,21 +31,24 @@ hidden_size = 320
 def trainIter(model, loader):
     print('Training start!')
     model = model.to(device)
+
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     # 学习率衰减计划，按cos曲线衰减，最大周期为10
 
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-7)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20, eta_min=0)
 
-    for epoch in range(10):  # loop over the dataset multiple times
+    for epoch in range(20):  # loop over the dataset multiple times
 
         plot_loss = 0.0
         print_loss = 0.0
-        iter=0
+        start = time.time()
+        iter = 0
         for session, packets, p_len, label_idx in loader:
 
-            pred = model(session.to(device), packets.to(device), p_len.to(device))
+            pred = model(session.to(device), packets.to(device), p_len)
+            pred = pred.cpu()
 
             optimizer.zero_grad()
 
@@ -67,14 +65,15 @@ def trainIter(model, loader):
 
             if (iter + 1) % print_every == 0:  # print every 5000 mini-batches
                 print('Epoch[%d,%5d/%d, %d%%] -%s /step  -loss: %.4f ' % (
-                    epoch + 1, iter + 1,T, (iter + 1) / T * 100, timeSince(start, iter / T), print_loss / print_every))
+                    epoch + 1, iter + 1, T, (iter + 1) / T * 100, timeSince(all_start, start, iter / T),
+                    print_loss / print_every))
                 print_loss = 0
 
             if iter % plot_every == 0:
                 all_losses.append((plot_loss / plot_every))
                 plot_loss = 0
 
-            iter+=1
+            iter += 1
 
         scheduler.step()
 
@@ -83,7 +82,7 @@ def trainIter(model, loader):
 
 # 验证
 # 用测试集验证，求出混淆矩阵
-def evaluate(model, c,loader):
+def evaluate(model, c, loader):
     total = 0
 
     list = np.zeros((c, c))
@@ -97,11 +96,11 @@ def evaluate(model, c,loader):
             # predicted = top_i[0].item()
 
             total = total + 32
-            for p,l in zip(top_i,label_idx):
-
+            for p, l in zip(top_i, label_idx):
                 list[l.item()][p] += 1
 
     caculate(list, c, total)
+    showMatrix(list)
 
 
 def caculate(index, C, total):
@@ -125,26 +124,47 @@ def caculate(index, C, total):
 
 def main():
     print(f'Using {device} device')
+    os.environ["OMP_NUM_THREADS"] = "6"  # 设置OpenMP计算库的线程数
+    os.environ["MKL_NUM_THREADS"] = "6"  # 设置MKL-DNN CPU加速库的线程数。
+    torch.set_num_threads(8)
+
     net = nn.DataParallel(model_v2.ArcNet()).to(device)
     # # 开始！
-    path = r'D:\sessions'
+    path = r'C:\sessions'
     training_data = data.IDSDataset('all_train.csv', path, )
     test_data = data.IDSDataset('all_test.csv', path)
 
-    train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True,num_workers=4)
-    test_dataloader = DataLoader(test_data, batch_size=32, shuffle=True,num_workers=4)
+    train_dataloader = DataLoader(training_data, batch_size=batch, shuffle=True, num_workers=4)
 
     trainIter(net, train_dataloader)
-    evaluate(net,15,test_dataloader)
+    torch.save(net.state_dict(), 'model3.pth')
 
-    torch.save(net.state_dict(), 'model.pth')
+    test_dataloader = DataLoader(test_data, batch_size=batch, shuffle=True, num_workers=4)
+    evaluate(net, 15, test_dataloader)
 
     # model.load_state_dict(torch.load('model.pth'))
 
     plt.plot(all_losses)
-    torch.save(all_losses, 'losses.pt')
+    torch.save(all_losses, 'losses3.pt')
     plt.show()
 
+
+def showMatrix(index):
+    attention = np.array(index)
+    sentence = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    cax = ax.matshow(attention, cmap='bone')
+    fig.colorbar(cax)
+    fontdict = {'fontsize': 12}
+    ax.set_xticklabels([''] + sentence, fontdict=fontdict, rotation=90)
+    ax.set_yticklabels([''] + sentence, fontdict=fontdict)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+    plt.ylabel('Actual label')
+    plt.xlabel('Predict label')
+    plt.suptitle('Confusion Matrix')
+    plt.show()
 
 
 if __name__ == '__main__':

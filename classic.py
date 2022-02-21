@@ -39,19 +39,20 @@ def train_sets(data_set):
 if __name__ == '__main__':
     names = ["Decision Tree",
              "Random Forest", "Neural Net", "AdaBoost",
-             "Naive Bayes", "QDA",
-             "RBF SVM",
+             "Naive Bayes",
+             # "QDA",
+             # "RBF SVM",
              # "Linear SVM",
              "Nearest Neighbors"]
     classifiers = [
         DecisionTreeClassifier(),
         RandomForestClassifier(n_estimators=100),
-        MLPClassifier(alpha=1, max_iter=1000),
-        AdaBoostClassifier(n_estimators=100),
+        MLPClassifier(hidden_layer_sizes=256,random_state=0,max_iter=500,early_stopping=True,batch_size=32),
+        AdaBoostClassifier(n_estimators=200,random_state=0),
         GaussianNB(),
-        QuadraticDiscriminantAnalysis(),
-        make_pipeline(StandardScaler(), SVC(gamma='auto')),
-        # make_pipeline(StandardScaler(), SVC(gamma='auto', kernel="linear", C=0.025)),
+        # QuadraticDiscriminantAnalysis(),
+        # make_pipeline(StandardScaler(), SVC(gamma='auto')),
+        # make_pipeline(StandardScaler(), SVC(gamma='auto', kernel="linear")),
         KNeighborsClassifier(n_neighbors=5)]
 
     # train_sets(nslkddSet.nsl_set())

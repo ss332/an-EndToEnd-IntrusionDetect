@@ -10,22 +10,19 @@ class ArcNet(nn.Module):
 
     def __init__(self):
         super(ArcNet, self).__init__()
-        packet_features = 512  # q
-        session_features = 512  # v
-        hidden_size = 512
 
         glimpses = 2
-        self.image = SessionProcessor(drop=0.5)
-        self.text = PacketProcessor(drop=0.5)
+        self.image = SessionProcessor(drop=0)
+        self.text = PacketProcessor(drop=0)
 
-        self.attention = Attention(v_features=512, q_features=512, mid_features=256, glimpses=2, drop=0.5, )
+        self.attention = Attention(v_features=512, q_features=512, mid_features=256, glimpses=2, drop=0.2)
 
-        self.classifier = Classifier(in_features=glimpses * 512 + 512, mid_features=512, categorys=15, drop=0.5, )
+        self.classifier = Classifier(in_features=glimpses * 512 + 512, mid_features=256, categorys=15, drop=0.2)
 
         # 权重0初始化
         for m in self.modules():
             if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
-                init.xavier_uniform(m.weight)
+                init.xavier_uniform_(m.weight)
                 if m.bias is not None:
                     m.bias.data.zero_()
 
@@ -36,8 +33,8 @@ class ArcNet(nn.Module):
         q = self.text(q, list(q_len.data))
         # 归一化 v=[n,c,w,h]
         v = v / (v.norm(p=2, dim=1, keepdim=True).expand_as(v) + 1e-8)
-        a = self.attention(v, q)  # [n,g,w,h]
-        v = apply_attention(v, a)  # [n,g*v]
+        we = self.attention(v, q)  # [n,g,w,h]
+        v = apply_attention(v, we)  # [n,g*v]
 
         combined = torch.cat([v, q], dim=1)  # [n,g*v+q]
         detect = self.classifier(combined)
@@ -50,8 +47,8 @@ class SessionProcessor(torch.nn.Module):
         self.conv1 = nn.Conv2d(1, 32, (3, 3))
         self.pool = nn.MaxPool2d(2, 2)
         self.conv2 = nn.Conv2d(32, 64, (3, 3))
-        self.conv3 = nn.Conv2d(64, 128, (3, 3))
-        self.conv4 = nn.Conv2d(128, 512, (1, 1))
+        self.conv3 = nn.Conv2d(64, 128, (2, 2))
+        self.conv4 = nn.Conv2d(128, 512, (2, 2))
         self.relu = nn.ReLU()
         self.drop = nn.Dropout(drop)
 
@@ -60,9 +57,9 @@ class SessionProcessor(torch.nn.Module):
         x = self.pool(self.relu(self.conv1(x)))
         # [1,15,15]-> [64,13,13]->[64,6,6]
         x = self.pool(self.relu(self.conv2(x)))
-        # [64,6,6]->[128,4,4]
+        # [64,6,6]->[128,5,5]
         x = self.relu(self.conv3(x))
-        # [512,4,4]->[512,4,4]
+        # [128,5,5]->[512,4,4]
         x = self.relu(self.conv4(x))
         x = self.drop(x)
         # 512*4*4=8192
@@ -84,8 +81,6 @@ class PacketProcessor(nn.Module):
         # 初始化参数
         self._init_gru(self.gru.weight_hh_l0)
         self.gru.bias_hh_l0.data.zero_()
-
-        # init.xavier_uniform(self.embedding.weight)
 
     def _init_gru(self, weight):
         for w in weight.chunk(4, 0):
@@ -130,20 +125,20 @@ class Attention(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, v, q):
-        # v=[n,256,14,14]
+        # v=[n,256,4,4]
         v = self.v_conv(self.drop(v))
         # q=[n,256]
         q = self.q_lin(self.drop(q))
         # q=
-        q = tile_2d_over_nd(q, v)
+        q = expand(q, v)
         x = self.relu(v + q)
-        x = self.x_conv(self.drop(x))  # [n,2,14,14]
+        x = self.x_conv(self.drop(x))  # [n,2,4,4]
 
         return x
 
 
-def tile_2d_over_nd(feature_vector, feature_map):
-    # 在特征图上加上所有数据包特征向量，特征向量需要与特征图的批次与通道数一样
+def expand(feature_vector, feature_map):
+    # 扩展特征向量为特征图，进行+运算，特征向量需要与特征图的批次与通道数一样
     n, c = feature_vector.size()
     spatial_size = feature_map.dim() - 2  # 2
     # tile=[n,c,w,h]
@@ -157,10 +152,10 @@ def apply_attention(input, attention):
     # glimpses=2
     glimpses = attention.size(1)
 
-    # flatten the spatial dims into the third dim, since we don't need to care about how they are arranged
+    # 展平到空间维度到一维如4*4-》16，
     input = input.view(n, 1, c, -1)  # [n, 1, c, s]
     attention = attention.view(n, glimpses, -1)  # [n,g,s]
     attention = F.softmax(attention, dim=-1).unsqueeze(2)  # [n, g, 1, s]
-    weighted = attention * input  # [n, g, v, s]
-    weighted_mean = weighted.sum(dim=-1)  # [n, g, v]
+    weighted = attention * input  # [n, g, c, s]
+    weighted_mean = weighted.sum(dim=-1)  # [n, g, c]
     return weighted_mean.view(n, -1)

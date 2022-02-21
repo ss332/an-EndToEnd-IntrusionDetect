@@ -13,7 +13,7 @@ import torch
 --------------------------------------------------------
 版本|首部长度|    区分服务1     |总长度2                    |
        标识 2                |标志3bit|片偏移17           |
-生存时间1      |协议1         |首部校验和2                 |
+生存时间1      |协议1         |首部校验和2                 | 
                          源地址4                         |
                          目的地址4                       |
                     可选字段(长度可变) 填充                |
@@ -102,14 +102,14 @@ def update_cache(list, arrays, id, seq):
     if id == sesseion_num:
         a = 1
         for session in list:
-            file_name = r'D:\sessions\files{}\session{}.pt'.format(seq, id - a)
+            file_name = r'C:\sessions\files{}\session{}.pt'.format(seq, id - a)
             torch.save(session, file_name)
             a = a+1
 
     elif len(list) < cahe_length:
         list.insert(0, arrays)
     else:
-        file_name = r'D:\sessions\files{}\session{}.pt'.format(seq, id - cahe_length)
+        file_name = r'C:\sessions\files{}\session{}.pt'.format(seq, id - cahe_length)
 
         torch.save(list[len(list) - 1], file_name)
         # 老的保存，新的插入
@@ -220,7 +220,7 @@ def split(files, seq, count_io=0):
                     # 没有超时
                     if timeout <= 600:
                         isUsed = 1
-                        record_name = r'D:\sessions\files{}\session{}.pt'.format(seq, j)
+                        record_name = r'C:\sessions\files{}\session{}.pt'.format(seq, j)
                         flows[j][5] += 1
                         flows[j][6] = duration
                         if isFin == 1:

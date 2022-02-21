@@ -4,10 +4,11 @@ import torch
 from torch.utils.data import Dataset
 
 
-
 class IDSDataset(Dataset):
+
     def __init__(self, annotations_file, img_dir=r'', transform=None, target_transform=None):
         self.sessions_labels = pd.read_csv(annotations_file, usecols=['id', 'file', 'label'])
+        print(self.sessions_labels['label'].value_counts())
         self.img_dir = img_dir
         self.transform = transform
         self.target_transform = target_transform

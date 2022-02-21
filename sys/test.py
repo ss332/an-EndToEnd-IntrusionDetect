@@ -2,8 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import os
-
-
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import ticker
+import pandas as pd
     # rnn = nn.GRU(10, 20, 1)
     # input = torch.randn(5, 3, 10)
     # h0 = torch.randn(1, 3, 20)
@@ -39,14 +41,64 @@ def tile_2d_over_nd(feature_vector, feature_map):
 # c=torch.zeros((32,320))
 # b=a.expand_as(c)
 # print(b.shape)
+# 在输入特征图上应用注意力权重
 
-pred=torch.randn((3,10))
-top_n, top_i = pred.topk(1)
-print(top_n,top_i)
-predicted = top_i[0].item()
-print(predicted)
-label_idx=torch.zeros(3)
 
-for p,l in zip(top_i,label_idx):
-    print(p.item(),int(l.item()))
+# attention = np.random.randint(0,14,(15,15))
+# sentence=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# cax = ax.matshow(attention, cmap='bone')
+# fig.colorbar(cax)
+# fontdict = {'fontsize': 12}
+# ax.set_xticklabels([''] + sentence, fontdict=fontdict, rotation=90)
+# ax.set_yticklabels([''] + sentence, fontdict=fontdict)
+# ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+# ax.yaxis.set_major_locator(ticker.MultipleLocator(1))
+# plt.ylabel('Actual label')
+# plt.xlabel('Predict label')
+# plt.suptitle('Attention weights')
+# plt.show()
 
+from matplotlib.colors import LinearSegmentedColormap
+from captum.attr import (
+    IntegratedGradients,
+    LayerIntegratedGradients,
+    TokenReferenceBase,
+    configure_interpretable_embedding_layer,
+    remove_interpretable_embedding_layer,
+    visualization
+)
+
+
+def encode_sessions(session):
+    session_tensor = torch.zeros(1024)
+    size = 0
+    for k in range(session.size(0)):
+        x = session[k]
+        for j in range(x.size(0)):
+            if x[j] != 0 and size < 1024:
+                session_tensor[size] = x[j]
+                size = size + 1
+
+        # (n,c,w,h)
+    session_tensor = session_tensor.view(1, 1, 32, 32)
+    return session_tensor
+default_cmap = LinearSegmentedColormap.from_list('custom blue',
+                                                 [(0, '#ffffff'),
+                                                  (0.25, '#252b36'),
+                                                  (1, '#000000')], N=256)
+
+file = r'C:\sessions\files{}\session{}.pt'.format(7, 10516)
+orin=torch.load(file)
+orin = encode_sessions(orin)
+text=torch.load('./s13.pt')
+print()
+original_im_mat = np.transpose(orin.squeeze(0).cpu().detach().numpy(), (1, 2, 0))
+attributions_img = np.transpose(text.unsqueeze(0).cpu().detach().numpy(), (1, 2, 0))
+
+visualization.visualize_image_attr_multiple(attributions_img, original_im_mat,
+                                            ["original_image", "heat_map"], ["all", "absolute_value"],
+                                            titles=["Session", 'attribution-Infiltration'],
+                                            cmap=default_cmap,
+                                            show_colorbar=True)

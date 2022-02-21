@@ -118,3 +118,36 @@ idl_std	Standard deviation time a flow was idle before becoming active：流空�
 idl_max	Maximum time a flow was idle before becoming active：流空闲最大时间
 idl_min	Minimum time a flow was idle before becoming active：流空闲最小时间
 提取特征并创建 CSV 文件后，现在我们需要标记数据。在这里，我们使用我们的攻击场景计划、源和目标的 IP 和端口以及协议名称来标记每个流的数据。
+# {'Benign': 0, 'FTP-BruteForce': 1, 'SSH-Bruteforce': 2, 'DoS attacks-GoldenEye': 3,'DoS attacks-Slowloris':4,'DoS attacks-Hulk':5,
+'DoS attacks-SlowHTTPTest':6,'DDoS attacks-LOIC-HTTP ':7,'DDOS attack-HOIC':8,'DDOS attack-LOIC-UDP':9,'Brute Force -Web':10,
+'Brute Force -XSS':11,'SQL Injection':12,'Infilteration':13,'Bot':14,}
+Benign            667626   5
+FTP-BruteForce    193360   2.5
+SSH-Bruteforce    187589   2.5
+Name: Label, dtype: int64
+Benign                   996077   5
+DoS attacks-GoldenEye     41508   4
+DoS attacks-Slowloris     10990   1
+Name: Label, dtype: int64
+DoS attacks-Hulk            461912    2.5
+Benign                      446772    5
+DoS attacks-SlowHTTPTest    139890   5
+Name: Label, dtype: int64
+DDoS attacks-LOIC-HTTP    576191     5
+Benign                    423809     5
+Name: Label, dtype: int64
+DDOS attack-HOIC        686012       5
+Benign                  360833       38270
+DDOS attack-LOIC-UDP      1730      1730
+Name: Label, dtype: int64
+Benign              1048213        99638
+Brute Force -Web        249       -
+Brute Force -XSS         79       -
+SQL Injection            34       -
+Name: Label, dtype: int64
+Benign           782237       5
+Infilteration    161934       5
+Name: Label, dtype: int64
+Benign    762384           5
+Bot       286191           5
+Name: Label, dtype: int64
