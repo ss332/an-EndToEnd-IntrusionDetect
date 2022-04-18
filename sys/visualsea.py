@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 import seaborn as sns
-
+import torch
 sns.set_style('whitegrid')
 
 
@@ -46,15 +46,27 @@ def my_plotter(lr, T_max, eta_min=0):
     x = np.linspace(0, 10, 500)  # Sample data.
     y = eta_min + 0.5 * (lr-eta_min) * (1 + np.cos((x / T_max) * np.pi))
     fig, ax = plt.subplots(figsize=(5, 3), layout='constrained')
-    ax.plot(x, y, label='CosineLine')
+    ax.plot(x, y,label="Cosine")
     ax.set_xlabel('epoch')
     ax.set_ylabel('learning rate')
     ax.set_title("CosineAnnealingLR")
     ax.legend()
+    ax.grid(False)
     plt.show()
 
 # Accuracy : 97.29839285714286 544871.0
 
+
+
+def losses():
+    loss=torch.load('losses3.pt')
+    plt.xlabel('epoch',fontsize=14)
+    plt.ylabel('loss',fontsize=14)
+    plt.plot(loss)
+    plt.grid(False)
+    plt.show()
+
+losses()
 def plot_bar():
     df = pd.DataFrame( {"class":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],
                         "recall":[94.50780742063098, 99.99028324345333, 99.99218780516387, 100.0, 99.65341488277268,
@@ -71,5 +83,5 @@ def plot_bar():
     plt.show()
 
 
-plot_bar()
+
 
