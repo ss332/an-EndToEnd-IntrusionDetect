@@ -10,13 +10,13 @@
 
 ​    
 
-![image-20220601144028690](C:\Users\alice\intrusionDetection\images\image-20220601144028690.png)
+![the end to end detect model](./images/image-20220601144028690.png)
 
 ​        fig 1. the end to end detect model
 
 在处理pcap文件得到的80万个会话样本数据集中acc=99.96%。这是一个结合cnn和rnn和注意力机制的网络模型，是不是和问答模型很像？这确实如此，因为我的初始模型并没有注意力层，初始的设计模型结构很简单，如下所示model中的model_v1.py：
 
-![image-20220601144336269](C:\Users\alice\intrusionDetection\images\image-20220601144336269.png)
+![the simple end to end detect model](./images/image-20220601144336269.png)
 
 ​             fig 2. the simple end to end detect model
 
