@@ -18,4 +18,4 @@ def to_split(file, train=0.7):
     train.to_csv('all_test.csv',index=0)
 
 
-to_split('all_flows.txt', 0.7)
+to_split('../data/all_flows.txt', 0.7)

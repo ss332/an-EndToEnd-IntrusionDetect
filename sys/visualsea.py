@@ -9,7 +9,7 @@ sns.set_style('whitegrid')
 
 
 def visualize(graph):
-    flows = pd.read_csv('all_flows.txt')
+    flows = pd.read_csv('../data/all_flows.txt')
     packets = flows['bytes']
 
     for i in range(800000):

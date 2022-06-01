@@ -7,7 +7,7 @@ from sklearn.utils import shuffle
 import math
 import torch.optim as optim
 import warnings
-import model_v1
+from Model import model_v1
 import numpy as np
 
 warnings.filterwarnings("ignore")
@@ -15,7 +15,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'Using {device} device')
 
 # flows数据记录表，表明每一个流，具体数据根据id取得
-flows = pd.read_csv('all_flows.txt')
+flows = pd.read_csv('../data/all_flows.txt')
 flows = shuffle(flows)
 # 标签集
 labelSet = flows["label"].to(device)
