@@ -39,7 +39,7 @@ def trainIter(model, loader):
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20, eta_min=0)
 
-    for epoch in range(20):  # loop over the dataset multiple times
+    for epoch in range(10):  # loop over the dataset multiple times
 
         plot_loss = 0.0
         print_loss = 0.0
@@ -130,14 +130,14 @@ def main():
 
     net = nn.DataParallel(model_v2.ArcNet()).to(device)
     # # 开始！
-    path = r'C:\sessions'
+    path = r'D:\sessions'
     training_data = data.IDSDataset('all_train.csv', path, )
     test_data = data.IDSDataset('all_test.csv', path)
 
     train_dataloader = DataLoader(training_data, batch_size=batch, shuffle=True, num_workers=4)
 
     trainIter(net, train_dataloader)
-    torch.save(net.state_dict(), 'model3.pth')
+    torch.save(net.state_dict(), 'model2k.pth')
 
     test_dataloader = DataLoader(test_data, batch_size=batch, shuffle=True, num_workers=4)
     evaluate(net, 15, test_dataloader)
@@ -145,7 +145,7 @@ def main():
     # model.load_state_dict(torch.load('model.pth'))
 
     plt.plot(all_losses)
-    torch.save(all_losses, 'losses3.pt')
+    torch.save(all_losses, 'losses2.pt')
     plt.show()
 
 

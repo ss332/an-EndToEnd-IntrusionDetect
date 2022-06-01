@@ -47,30 +47,80 @@ print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(1519060380.14541)))
 # bot_ddos.drop('se', axis=1, inplace=True)
 # bot_ddos.to_csv('flows_ddos.csv')
 # editcap -A "2018-02-17 01:45:00"  -B "2018-02-17 02:19:00" H:\ids2018\fri-16-02\UCAP172.31.69.25-part1.pcap
+files1 = [r'H:\ids2018\wed-14-02\UCAP172.31.69.25',
+          r'H:\ids2018\wed-14-02\capEC2AMAZ-O4EL3NG-172.31.69.24',
+          r'H:\ids2018\wed-14-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'H:\ids2018\wed-14-02\capEC2AMAZ-O4EL3NG-172.31.69.28']  # ftp,ssh bruteforce
+files2 = [r'H:\ids2018\thurs-15-02\UCAP172.31.69.25',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.17',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.8',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.12',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'H:\ids2018\thurs-15-02\capEC2AMAZ-O4EL3NG-172.31.69.30']  # dos-goldenEye,slowloris
+files3 = [r'H:\ids2018\fri-16-02\UCAP172.31.69.25-part1.pcap',  # dos slowhttptest,hulk
+          r'H:\ids2018\fri-16-02\UCAP172.31.69.25-part2.pcap',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.24',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.26',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.28',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'H:\ids2018\fri-16-02\capEC2AMAZ-O4EL3NG-172.31.69.30',
+          ]
+files4 = [r'E:\Amazon\tuesday-20-02\UCAP172.31.69.25',
+          r'E:\Amazon\tuesday-20-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'E:\Amazon\tuesday-20-02\capEC2AMAZ-O4EL3NG-172.31.69.24',
+          r'E:\Amazon\tuesday-20-02\capEC2AMAZ-O4EL3NG-172.31.69.28',
+          r'E:\Amazon\tuesday-20-02\capEC2AMAZ-O4EL3NG-172.31.69.29']  # dos loic-http
+files5 = [r'E:\Amazon\wednes-21-02\UCAP172.31.69.28-part1',  # dos loic-udp,hoic 耗时长
+          r'E:\Amazon\wednes-21-02\UCAP172.31.69.28-part2']
+files6 = [r'H:\ids2018\Thurs-22-02\UCAP172.31.69.28',
+          r'H:\ids2018\Thurs-22-02\UCAP172.31.69.21',
+          r'H:\ids2018\Thurs-22-02\UCAP172.31.69.22',
+          r'H:\ids2018\Thurs-22-02\UCAP172.31.69.25',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.17',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.14',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.10',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.8',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.6',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.12',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.26',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'H:\ids2018\Thurs-22-02\capEC2AMAZ-O4EL3NG-172.31.69.30'
+          ]  # web,xss bruteforce,sql injection
 
-for i in range(100001,120000):
-    path = r'D:\sessions\files8\session{}.pt'.format(i)
+files7 = [r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.24-part2',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.17',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.23',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.26',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.30',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.10',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.12',
+          r'D:\ids2018\wed-28-02\capEC2AMAZ-O4EL3NG-172.31.69.14'
+          ]  # infiltration
+files8 = [r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.23',  # bot
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.17',
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.14',
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.12',
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.29',
+          r'E:\Amazon\friday-02-03\capEC2AMAZ-O4EL3NG-172.31.69.30',]
+
+path = r'E:\Amazon\friday-02-03'
+dirs = os.listdir( path )
 
 
-    # k=2
-    # while k<=100:
-    #     a=r'D:\sessions\files{}\session{}.pt'.format(i+1,99800+k)
-    #     b= r'D:\sessions\files{}\session{}.pt'.format(i+1, 100001-k)
-    #     a_ensor=torch.load(a)
-    #     b_ensor = torch.load(b)
-    #     os.remove(b)
-    #     torch.save(a_ensor, b)
-    #     os.remove(a)
-    #     torch.save(b_ensor, a)
-    #     k=k+1
+for file in dirs:
 
-    if os.path.exists(path):  # 如果文件存在
+
+    ab_file=path+'\\'+file
+    if os.path.exists(ab_file):  # 如果文件存在
         # 删除文件，可使用以下两种方法。
 
         # print(input_tensor.size())
-        os.remove(path)
+        if ab_file not  in files8:
+            os.remove(ab_file)
 
-        # os.unlink(path)
+        #
     else:
-        print('no such file:%s' % path)  # 则返回文件不存在
+        print('no such file:%s ' % ab_file)  # 则返回文件不存在
 
